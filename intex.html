@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --tg-theme-bg-color: #1a1a1a;
+            --tg-theme-text-color: #ffffff;
+            --accent-color: #0088cc;
+        }
+        body {
+            background-color: var(--tg-theme-bg-color);
+            color: var(--tg-theme-text-color);
+            font-family: sans-serif;
+            margin: 0; padding: 20px;
+        }
+        .card {
+            background: #2c2c2c;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border: 1px solid #444;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .card.selected { border-color: var(--accent-color); background: #333; }
+        .price { color: #4caf50; font-weight: bold; }
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #444;
+            background: #222;
+            color: white;
+            box-sizing: border-box;
+        }
+        #main-btn {
+            width: 100%;
+            padding: 15px;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h3>Выберите услугу</h3>
+    <div id="services-list"></div>
+    
+    <input type="text" id="standoff-id" placeholder="Введите ваш Standoff 2 ID">
+    <button id="main-btn">Оформить заказ</button>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        const services = [
+            {id: 'S1', name: 'Silver to Gold', price: '45г / 20грн'},
+            {id: 'S2', name: 'Gold to Phoenix', price: '60г / 25грн'},
+            {id: 'SMULTI', name: 'Хочу 2+ звания', price: 'Договорная'}
+        ];
+
+        let selectedId = null;
+
+        const list = document.getElementById('services-list');
+        services.forEach(s => {
+            const div = document.createElement('div');
+            div.className = 'card';
+            div.innerHTML = `<div>${s.name}</div><div class="price">${s.price}</div>`;
+            div.onclick = () => {
+                document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
+                div.classList.add('selected');
+                selectedId = s.id;
+            };
+            list.appendChild(div);
+        });
+
+        document.getElementById('main-btn').onclick = () => {
+            const stId = document.getElementById('standoff-id').value;
+            if (!selectedId || !stId) return alert('Выберите услугу и введите ID');
+            
+            const data = { service_id: selectedId, standoff_id: stId };
+            tg.sendData(JSON.stringify(data)); // Отправляет данные боту
+            tg.close();
+        };
+    </script>
+</body>
+</html>
