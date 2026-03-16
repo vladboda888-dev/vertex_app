@@ -3,348 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Vertex Ultimate Web App</title>
+    <title>Vertex Ultimate Control</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #080808;
-            --card-bg: #121212;
+            --bg: #0a0a0a;
+            --card: #141414;
             --accent: #ff0000;
-            --accent-dim: #8b0000;
             --text: #ffffff;
-            --text-dim: #888888;
-            --success: #00ff66;
-            --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+            --text-dim: #777;
+            --success: #00ff88;
+            --gold: #ffd700;
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        
-        body {
-            background-color: var(--bg-color);
-            color: var(--text);
-            font-family: 'Inter', sans-serif;
-            margin: 0;
-            padding: 0;
-            overflow-x: hidden;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-
-        /* Анимации */
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes glow { 0% { box-shadow: 0 0 5px var(--accent-dim); } 50% { box-shadow: 0 0 20px var(--accent); } 100% { box-shadow: 0 0 5px var(--accent-dim); } }
-
-        .page { display: none; padding: 20px; animation: fadeIn 0.4s ease-out; }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; padding: 0; }
+        .page { display: none; padding: 20px 20px 100px; animation: fadeIn 0.3s; }
         .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        header {
-            padding: 30px 20px;
-            text-align: center;
-            background: linear-gradient(to bottom, #1a0000, var(--bg-color));
-        }
+        .card { background: var(--card); border-radius: 16px; padding: 18px; margin-bottom: 15px; border: 1px solid #1f1f1f; }
+        .section-title { font-size: 11px; text-transform: uppercase; color: var(--accent); letter-spacing: 2px; margin: 20px 0 10px; font-weight: 800; }
 
-        .logo {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 32px;
-            font-weight: 900;
-            color: var(--accent);
-            text-shadow: 0 0 15px var(--accent);
-            margin: 0;
-            letter-spacing: 4px;
-        }
+        /* Кнопки */
+        .btn-action { width: 100%; background: var(--accent); color: #fff; border: none; padding: 16px; border-radius: 12px; font-weight: 800; text-transform: uppercase; margin-top: 10px; }
+        .btn-secondary { width: 100%; background: #222; color: #fff; border: none; padding: 12px; border-radius: 10px; font-size: 12px; margin-top: 5px; }
 
-        /* Навигация (Табы) */
-        .nav-bar {
-            display: flex;
-            justify-content: space-around;
-            background: var(--card-bg);
-            border-top: 1px solid #222;
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            padding: 10px 0;
-            z-index: 1000;
-        }
-
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            color: var(--text-dim);
-            font-size: 10px;
-            text-transform: uppercase;
-            font-weight: 700;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        .nav-item.active { color: var(--accent); }
-        .nav-item i { font-size: 20px; margin-bottom: 4px; }
-
-        /* Карточки и Инпуты */
-        .section-title {
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: var(--accent);
-            margin: 20px 0 10px;
-            font-weight: 800;
-        }
-
-        .card {
-            background: var(--card-bg);
-            border: 1px solid #1a1a1a;
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 12px;
-            transition: 0.3s;
-        }
-
-        .card.clickable:active { transform: scale(0.97); background: #1a0505; }
-        .card.selected { border-color: var(--accent); background: #200000; }
-
-        select, input {
-            width: 100%;
-            background: #181818;
-            border: 1px solid #252525;
-            padding: 14px;
-            border-radius: 12px;
-            color: white;
-            font-size: 16px;
-            margin-bottom: 15px;
-            outline: none;
-        }
-
-        input:focus { border-color: var(--accent); }
-
-        .btn-main {
-            width: 100%;
-            background: linear-gradient(45deg, var(--accent-dim), var(--accent));
-            color: white;
-            border: none;
-            padding: 18px;
-            border-radius: 14px;
-            font-size: 16px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            cursor: pointer;
-            box-shadow: var(--shadow);
-            transition: 0.3s;
-        }
-
-        .btn-main:disabled { opacity: 0.3; filter: grayscale(1); }
-
-        /* Админка */
-        .admin-stat {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .stat-item {
-            background: #1a1a1a;
-            padding: 15px;
-            border-radius: 12px;
-            text-align: center;
-        }
-
-        .stat-val { font-size: 20px; font-weight: 900; color: var(--accent); }
+        /* Лидерборд */
+        .leader-item { display: flex; align-items: center; justify-content: space-between; padding: 10px; border-bottom: 1px solid #222; }
+        .rank-num { font-weight: 900; color: var(--accent); width: 30px; }
         
-        .badge {
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 10px;
-            font-weight: 800;
-            text-transform: uppercase;
-        }
-        .badge-new { background: var(--accent); color: white; }
+        /* Табы */
+        nav { position: fixed; bottom: 0; width: 100%; background: rgba(10,10,10,0.9); backdrop-filter: blur(10px); display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #222; z-index: 1000; }
+        .nav-item { color: var(--text-dim); font-size: 9px; text-align: center; font-weight: 800; }
+        .nav-item.active { color: var(--accent); }
+        .nav-item span { display: block; font-size: 18px; }
+
+        /* Поля ввода */
+        input, select { width: 100%; background: #000; border: 1px solid #222; padding: 12px; border-radius: 10px; color: #fff; margin-bottom: 10px; outline: none; }
     </style>
 </head>
 <body>
-    <header id="header">
-        <h1 class="logo">VERTEX</h1>
-        <p style="color: var(--text-dim); font-size: 10px; margin: 5px 0 0;">SYSTEM OVERRIDE v.2.0</p>
-    </header>
-
-    <div id="page-shop" class="page active">
-        <div class="section-title">Конфигурация буста</div>
-        
-        <label style="font-size: 10px; color: var(--text-dim); margin-left: 5px;">ОТКУДА</label>
-        <select id="rank-from">
-            <option value="Silver 1-4">Silver 1-4</option>
-            <option value="Gold 1-4">Gold 1-4</option>
-            <option value="Phoenix">Phoenix</option>
-            <option value="Ranger">Ranger</option>
-            <option value="Champion">Champion</option>
-            <option value="Master">Master</option>
-            <option value="Elite">Elite</option>
-        </select>
-
-        <label style="font-size: 10px; color: var(--text-dim); margin-left: 5px;">КУДА</label>
-        <select id="rank-to">
-            <option value="Gold 1-4">Gold 1-4</option>
-            <option value="Phoenix">Phoenix</option>
-            <option value="Ranger">Ranger</option>
-            <option value="Champion">Champion</option>
-            <option value="Master">Master</option>
-            <option value="Elite">Elite</option>
-            <option value="Legend">Legend</option>
-        </select>
-
-        <div class="section-title">Метод исполнения</div>
-        <div class="card clickable" id="m-acc" onclick="selectMethod('account')">
-            <div style="font-weight: 800;">ВХОД В АККАУНТ</div>
-            <div style="font-size: 12px; color: var(--success);">Базовая стоимость</div>
+    <div id="p-shop" class="page active">
+        <div class="section-title">Заказать Буст</div>
+        <select id="b-type"><option>ММ (5x5)</option><option>Напарники (2x2)</option></select>
+        <div style="display: flex; gap: 10px;">
+            <select id="b-from"><option>Silver</option><option>Gold</option></select>
+            <select id="b-to"><option>Gold</option><option>Legend</option></select>
         </div>
-        <div class="card clickable" id="m-party" onclick="selectMethod('party')">
-            <div style="font-weight: 800;">БУСТ В ПАТИ (ЛОББИ)</div>
-            <div style="font-size: 12px; color: #f1c40f;">+35% к финальной стоимости</div>
+        <input type="number" id="b-id" placeholder="Ваш ID">
+        <button class="btn-action" onclick="send('order')">Оформить Заказ</button>
+
+        <div class="section-title">Активация промокода</div>
+        <div style="display: flex; gap: 5px;">
+            <input type="text" id="promo-input" placeholder="Введите код...">
+            <button style="background: var(--success); border: none; border-radius: 10px; padding: 0 15px;" onclick="send('promo')">✓</button>
         </div>
+    </div>
 
-        <div class="section-title">Персонализация</div>
-        <input type="number" id="user-id" placeholder="Ваш Standoff 2 ID (8 цифр)">
-        
-        <div id="price-display" class="price-tag" style="text-align: center; margin: 20px; font-size: 20px; font-weight: 900; color: var(--accent);">
-            ИТОГО: РАССЧЕТ ПРИ ЗАКАЗЕ
-        </div>
-
-        <button class="btn-main" id="order-btn" onclick="confirmOrder()">ИНИЦИИРОВАТЬ ЗАКАЗ</button>
-        <div style="height: 100px;"></div> </div>
-
-    <div id="page-table" class="page">
-        <div class="section-title">Официальный прайс-лист</div>
+    <div id="p-profile" class="page">
         <div class="card">
-            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-                <tr style="border-bottom: 1px solid #333; color: var(--accent);">
-                    <th style="text-align: left; padding: 10px;">Ранг</th>
-                    <th style="text-align: right; padding: 10px;">Цена</th>
-                </tr>
-                <tr><td style="padding: 10px;">Silver -> Gold</td><td style="text-align: right;">45г</td></tr>
-                <tr><td style="padding: 10px;">Gold -> Phoenix</td><td style="text-align: right;">60г</td></tr>
-                <tr><td style="padding: 10px;">Phoenix -> Ranger</td><td style="text-align: right;">75г</td></tr>
-                <tr><td style="padding: 10px;">Ranger -> Champion</td><td style="text-align: right;">90г</td></tr>
-                <tr><td style="padding: 10px;">Champion -> Master</td><td style="text-align: right;">110г</td></tr>
-                <tr><td style="padding: 10px;">Master -> Legend</td><td style="text-align: right;">250г+</td></tr>
-            </table>
-        </div>
-        <p style="font-size: 11px; color: var(--text-dim); text-align: center;">*Цены указаны за одно полное звание</p>
-    </div>
-
-    <div id="page-admin" class="page">
-        <div class="section-title">Панель управления</div>
-        <div class="admin-stat">
-            <div class="stat-item">
-                <div class="stat-val">24</div>
-                <div style="font-size: 10px;">Заказов</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-val">12.5к</div>
-                <div style="font-size: 10px;">Оборот (г)</div>
-            </div>
+            <div style="color: var(--text-dim); font-size: 12px;">МОЙ БАЛАНС</div>
+            <div style="font-size: 24px; font-weight: 900; color: var(--gold);" id="u-bal">0 G</div>
         </div>
         
-        <div class="section-title">Активные заказы</div>
-        <div id="admin-orders-list">
+        <div class="section-title">Таблица Лидеров (Топ XP)</div>
+        <div class="card" id="leaderboard">
+            <div class="leader-item"><span class="rank-num">1</span> <span>Zentrox</span> <span style="color:var(--success)">1540 XP</span></div>
+            <div class="leader-item"><span class="rank-num">2</span> <span>Player_1</span> <span style="color:var(--success)">1200 XP</span></div>
+        </div>
+
+        <div class="section-title">Реферальная Программа</div>
+        <div class="card" id="ref-link" style="font-size: 11px; color: var(--accent);">Загрузка...</div>
+    </div>
+
+    <div id="p-admin" class="page">
+        <div id="admin-owner-tools">
+            <div class="section-title">Управление (Владелец)</div>
+            <button class="btn-secondary" onclick="adminOp('mailing')">📢 Сделать рассылку</button>
+            <button class="btn-secondary" onclick="adminOp('add_promo')">🎟 Создать промокод</button>
+        </div>
+
+        <div class="section-title">Заказы в работе</div>
+        <div id="orders-list">
             <div class="card">
-                <div style="display: flex; justify-content: space-between;">
-                    <span style="font-weight: 800;">ID: 55678122</span>
-                    <span class="badge badge-new">Новый</span>
-                </div>
-                <div style="font-size: 12px; margin-top: 5px; color: var(--text-dim);">Gold -> Phoenix (Пати)</div>
-                <button style="margin-top: 10px; background: var(--success); border: none; padding: 5px 10px; border-radius: 5px; font-weight: 800;">ПРИНЯТЬ</button>
+                <div style="display:flex; justify-content: space-between;"><b>#5521</b> <span style="color:var(--success)">В Очереди</span></div>
+                <div style="font-size: 12px; margin: 5px 0;">Gold -> Phoenix | ID: 12345</div>
+                <button class="btn-action" style="padding: 8px; font-size: 12px;" onclick="adminOp('take_order')">ПРИНЯТЬ ЗАКАЗ</button>
             </div>
         </div>
     </div>
 
-    <nav class="nav-bar">
-        <div class="nav-item active" onclick="showPage('shop', this)"><span>🛒</span> МАГАЗИН</div>
-        <div class="nav-item" onclick="showPage('table', this)"><span>📊</span> ТАБЛИЦА</div>
-        <div class="nav-item" id="admin-tab" style="display: none;" onclick="showPage('admin', this)"><span>👑</span> АДМИН</div>
+    <nav>
+        <div class="nav-item active" onclick="nav('shop', this)"><span>🛒</span>Магазин</div>
+        <div class="nav-item" onclick="nav('profile', this)"><span>🏆</span>Топ</div>
+        <div class="nav-item" id="nav-adm" style="display:none;" onclick="nav('admin', this)"><span>👑</span>Админ</div>
     </nav>
     <script>
         const tg = window.Telegram.WebApp;
-        tg.expand();
-        tg.enableClosingConfirmation();
+        const ADMIN_ID = 6477651244;
+        const BUZTERS = [6477651244, 12345678]; // Список ID бустеров
 
-        // Настройка темы под Telegram
-        tg.headerColor = '#1a0000';
-        tg.backgroundColor = '#080808';
-
-        let currentMethod = 'account';
-        const adminId = 6477651244; // Твой ID для отображения админки
-
-        // Проверка прав админа
-        if (tg.initDataUnsafe?.user?.id === adminId) {
-            document.getElementById('admin-tab').style.display = 'flex';
+        // Инициализация
+        if (tg.initDataUnsafe?.user) {
+            const uid = tg.initDataUnsafe.user.id;
+            document.getElementById('ref-link').innerText = "t.me/VertexBot?start=" + uid;
+            
+            // Проверка прав (Владелец или Бустер)
+            if (uid === ADMIN_ID || BUZTERS.includes(uid)) {
+                document.getElementById('nav-adm').style.display = 'block';
+            }
+            // Скрываем инструменты владельца от обычных бустеров
+            if (uid !== ADMIN_ID) {
+                document.getElementById('admin-owner-tools').style.display = 'none';
+            }
         }
 
-        function showPage(pageId, el) {
-            // Переключение вкладок
+        function nav(page, el) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById('page-' + pageId).classList.add('active');
-            
-            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            document.getElementById('p-' + page).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             el.classList.add('active');
-            
-            tg.HapticFeedback.impactOccurred('light');
         }
 
-        function selectMethod(method) {
-            currentMethod = method;
-            document.getElementById('m-acc').classList.toggle('selected', method === 'account');
-            document.getElementById('m-party').classList.toggle('selected', method === 'party');
-            
-            const priceEl = document.getElementById('price-display');
-            if(method === 'party') {
-                priceEl.innerText = "ИТОГО: ДОГОВОРНАЯ (ПАТИ)";
-                priceEl.style.color = "#f1c40f";
-            } else {
-                priceEl.innerText = "ИТОГО: ПО ПРАЙСУ";
-                priceEl.style.color = "var(--accent)";
+        function send(action) {
+            let data = { action: action };
+            if(action === 'order') {
+                data.type = document.getElementById('b-type').value;
+                data.from = document.getElementById('b-from').value;
+                data.to = document.getElementById('b-to').value;
+                data.id = document.getElementById('b-id').value;
+            } else if(action === 'promo') {
+                data.code = document.getElementById('promo-input').value;
             }
-            tg.HapticFeedback.selectionChanged();
+            tg.sendData(JSON.stringify(data));
         }
 
-        function confirmOrder() {
-            const rankFrom = document.getElementById('rank-from').value;
-            const rankTo = document.getElementById('rank-to').value;
-            const standoffId = document.getElementById('user-id').value;
-
-            if (standoffId.length < 5) {
-                tg.showAlert("Введите корректный Standoff ID!");
-                return;
-            }
-
-            const data = {
-                type: "order_boost",
-                from: rankFrom,
-                to: rankTo,
-                method: currentMethod,
-                id: standoffId,
-                user_name: tg.initDataUnsafe?.user?.username || "Unknown"
-            };
-
-            tg.showConfirm(`Подтверждаете заказ: ${rankFrom} -> ${rankTo}?`, (ok) => {
-                if (ok) {
-                    tg.sendData(JSON.stringify(data));
-                    tg.HapticFeedback.notificationOccurred('success');
-                }
-            });
+        function adminOp(op) {
+            tg.sendData(JSON.stringify({ action: 'admin', op: op }));
         }
 
-        // Информируем админа о новых заказах (симуляция для демонстрации интерфейса)
-        function admin_acceptOrder(orderId) {
-            tg.HapticFeedback.impactOccurred('medium');
-            tg.showPopup({
-                title: 'Заказ принят',
-                message: 'Пользователь получит уведомление в боте.',
-                buttons: [{type: 'ok'}]
-            });
-        }
+        tg.expand();
+        tg.ready();
     </script>
 </body>
 </html>
