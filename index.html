@@ -456,9 +456,29 @@
         // 8. Пример получения данных (Для интеграции с твоим Python скриптом)
         // Эти данные бот должен передать при открытии приложения через URL или стартовые параметры
         window.addEventListener('load', () => {
+            // 1. Сообщаем Телеграму, что сайт готов
+            tg.ready();
+            tg.expand(); // Разворачиваем на весь экран
+
+            // 2. Достаем данные из ссылки
             const urlParams = new URLSearchParams(window.location.search);
-            document.getElementById('prof-bal').innerText = (urlParams.get('bal') || '0') + " G";
-            document.getElementById('prof-xp').innerText = urlParams.get('xp') || '0';
+            const balance = urlParams.get('bal') || '0';
+            const xp = urlParams.get('xp') || '0';
+            const role = urlParams.get('role') || 'client';
+
+            // 3. Записываем данные в профиль
+            document.getElementById('prof-bal').innerText = balance + " G";
+            document.getElementById('prof-xp').innerText = xp;
+
+            // 4. ЕСЛИ РОЛЬ АДМИН - ПОКАЗЫВАЕМ КНОПКУ АДМИНКИ
+            if (role === 'admin' || role === 'owner') {
+                document.getElementById('admin-nav-btn').style.display = 'flex';
+            } else {
+                document.getElementById('admin-nav-btn').style.display = 'none';
+            }
+
+            // 5. ПО УМОЛЧАНИЮ ОТКРЫВАЕМ ВКЛАДКУ ПРОФИЛЯ (чтобы не было пустого экрана)
+            showTab('profile');
         });
     </script>
 </body>
