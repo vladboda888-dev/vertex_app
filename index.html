@@ -3,307 +3,348 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Vertex Boost Store</title>
+    <title>Vertex Ultimate Web App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #0d0d0d;
-            --card-bg: #161616;
-            --accent-red: #ff3c3c;
-            --dark-red: #8b0000;
-            --text-main: #ffffff;
-            --text-dim: #a0a0a0;
-            --success: #2ecc71;
+            --bg-color: #080808;
+            --card-bg: #121212;
+            --accent: #ff0000;
+            --accent-dim: #8b0000;
+            --text: #ffffff;
+            --text-dim: #888888;
+            --success: #00ff66;
+            --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
         }
 
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
         body {
             background-color: var(--bg-color);
-            color: var(--text-main);
+            color: var(--text);
             font-family: 'Inter', sans-serif;
             margin: 0;
-            padding: 20px;
+            padding: 0;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Анимации */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes glow { 0% { box-shadow: 0 0 5px var(--accent-dim); } 50% { box-shadow: 0 0 20px var(--accent); } 100% { box-shadow: 0 0 5px var(--accent-dim); } }
+
+        .page { display: none; padding: 20px; animation: fadeIn 0.4s ease-out; }
+        .page.active { display: block; }
+
+        header {
+            padding: 30px 20px;
+            text-align: center;
+            background: linear-gradient(to bottom, #1a0000, var(--bg-color));
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 32px;
+            font-weight: 900;
+            color: var(--accent);
+            text-shadow: 0 0 15px var(--accent);
+            margin: 0;
+            letter-spacing: 4px;
+        }
+
+        /* Навигация (Табы) */
+        .nav-bar {
+            display: flex;
+            justify-content: space-around;
+            background: var(--card-bg);
+            border-top: 1px solid #222;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            padding: 10px 0;
+            z-index: 1000;
+        }
+
+        .nav-item {
             display: flex;
             flex-direction: column;
             align-items: center;
-            overflow-x: hidden;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 30px;
-            animation: fadeInDown 0.8s ease;
-        }
-
-        .logo-text {
-            font-size: 28px;
-            font-weight: 800;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            background: linear-gradient(to right, var(--accent-red), #ff8e8e);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin: 0;
-        }
-
-        .subtitle {
-            font-size: 12px;
             color: var(--text-dim);
-            margin-top: 5px;
-        }
-
-        .section-title {
-            align-self: flex-start;
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--accent-red);
-            margin: 20px 0 10px 5px;
+            font-size: 10px;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
         }
 
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 12px;
-            width: 100%;
-            max-width: 500px;
+        .nav-item.active { color: var(--accent); }
+        .nav-item i { font-size: 20px; margin-bottom: 4px; }
+
+        /* Карточки и Инпуты */
+        .section-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--accent);
+            margin: 20px 0 10px;
+            font-weight: 800;
         }
 
         .card {
             background: var(--card-bg);
-            border: 1px solid #222;
+            border: 1px solid #1a1a1a;
             border-radius: 16px;
             padding: 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
+            margin-bottom: 12px;
+            transition: 0.3s;
         }
 
-        .card:active {
-            transform: scale(0.98);
-        }
+        .card.clickable:active { transform: scale(0.97); background: #1a0505; }
+        .card.selected { border-color: var(--accent); background: #200000; }
 
-        .card.selected {
-            border-color: var(--accent-red);
-            background: #1a0a0a;
-            box-shadow: 0 0 20px rgba(255, 60, 60, 0.15);
-        }
-
-        .card.selected::after {
-            content: '';
-            position: absolute;
-            left: 0; top: 0; bottom: 0;
-            width: 4px;
-            background: var(--accent-red);
-        }
-
-        .card-info {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .card-title {
-            font-weight: 600;
-            font-size: 15px;
-        }
-
-        .card-price {
-            font-size: 13px;
-            color: var(--success);
-            font-weight: 600;
-        }
-
-        .input-group {
+        select, input {
             width: 100%;
-            max-width: 500px;
-            margin-top: 25px;
-        }
-
-        input {
-            width: 100%;
-            background: var(--card-bg);
-            border: 1px solid #222;
+            background: #181818;
+            border: 1px solid #252525;
+            padding: 14px;
             border-radius: 12px;
-            padding: 15px;
             color: white;
             font-size: 16px;
-            font-family: inherit;
+            margin-bottom: 15px;
             outline: none;
-            transition: border-color 0.3s;
         }
 
-        input:focus {
-            border-color: var(--accent-red);
-        }
+        input:focus { border-color: var(--accent); }
 
-        #main-btn {
+        .btn-main {
             width: 100%;
-            max-width: 500px;
-            background: var(--accent-red);
+            background: linear-gradient(45deg, var(--accent-dim), var(--accent));
             color: white;
             border: none;
-            border-radius: 14px;
             padding: 18px;
+            border-radius: 14px;
             font-size: 16px;
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-top: 30px;
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(255, 60, 60, 0.3);
-            transition: all 0.3s;
+            box-shadow: var(--shadow);
+            transition: 0.3s;
         }
 
-        #main-btn:disabled {
-            background: #333;
-            color: #666;
-            box-shadow: none;
-            transform: none !important;
-        }
+        .btn-main:disabled { opacity: 0.3; filter: grayscale(1); }
 
-        @keyframes fadeInDown {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .modes-grid {
+        /* Админка */
+        .admin-stat {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            width: 100%;
-            max-width: 500px;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
         }
 
-        .mode-card {
-            background: var(--card-bg);
-            border: 1px solid #222;
-            border-radius: 10px;
-            padding: 10px;
+        .stat-item {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 12px;
             text-align: center;
-            font-size: 12px;
-            font-weight: 600;
-            transition: 0.2s;
         }
 
-        .mode-card.selected {
-            background: var(--accent-red);
-            border-color: var(--accent-red);
+        .stat-val { font-size: 20px; font-weight: 900; color: var(--accent); }
+        
+        .badge {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
         }
+        .badge-new { background: var(--accent); color: white; }
     </style>
 </head>
 <body>
-
-    <header>
-        <p class="logo-text">Vertex Boost</p>
-        <p class="subtitle">Элитный буст Standoff 2</p>
+    <header id="header">
+        <h1 class="logo">VERTEX</h1>
+        <p style="color: var(--text-dim); font-size: 10px; margin: 5px 0 0;">SYSTEM OVERRIDE v.2.0</p>
     </header>
 
-    <div class="section-title">Выберите услугу</div>
-    <div class="grid" id="services-list">
+    <div id="page-shop" class="page active">
+        <div class="section-title">Конфигурация буста</div>
+        
+        <label style="font-size: 10px; color: var(--text-dim); margin-left: 5px;">ОТКУДА</label>
+        <select id="rank-from">
+            <option value="Silver 1-4">Silver 1-4</option>
+            <option value="Gold 1-4">Gold 1-4</option>
+            <option value="Phoenix">Phoenix</option>
+            <option value="Ranger">Ranger</option>
+            <option value="Champion">Champion</option>
+            <option value="Master">Master</option>
+            <option value="Elite">Elite</option>
+        </select>
+
+        <label style="font-size: 10px; color: var(--text-dim); margin-left: 5px;">КУДА</label>
+        <select id="rank-to">
+            <option value="Gold 1-4">Gold 1-4</option>
+            <option value="Phoenix">Phoenix</option>
+            <option value="Ranger">Ranger</option>
+            <option value="Champion">Champion</option>
+            <option value="Master">Master</option>
+            <option value="Elite">Elite</option>
+            <option value="Legend">Legend</option>
+        </select>
+
+        <div class="section-title">Метод исполнения</div>
+        <div class="card clickable" id="m-acc" onclick="selectMethod('account')">
+            <div style="font-weight: 800;">ВХОД В АККАУНТ</div>
+            <div style="font-size: 12px; color: var(--success);">Базовая стоимость</div>
+        </div>
+        <div class="card clickable" id="m-party" onclick="selectMethod('party')">
+            <div style="font-weight: 800;">БУСТ В ПАТИ (ЛОББИ)</div>
+            <div style="font-size: 12px; color: #f1c40f;">+35% к финальной стоимости</div>
         </div>
 
-    <div class="section-title">Режим игры</div>
-    <div class="modes-grid" id="modes-list">
+        <div class="section-title">Персонализация</div>
+        <input type="number" id="user-id" placeholder="Ваш Standoff 2 ID (8 цифр)">
+        
+        <div id="price-display" class="price-tag" style="text-align: center; margin: 20px; font-size: 20px; font-weight: 900; color: var(--accent);">
+            ИТОГО: РАССЧЕТ ПРИ ЗАКАЗЕ
         </div>
 
-    <div class="input-group">
-        <div class="section-title">Ваш игровой ID</div>
-        <input type="number" id="standoff-id" placeholder="Например: 12345678" inputmode="numeric">
+        <button class="btn-main" id="order-btn" onclick="confirmOrder()">ИНИЦИИРОВАТЬ ЗАКАЗ</button>
+        <div style="height: 100px;"></div> </div>
+
+    <div id="page-table" class="page">
+        <div class="section-title">Официальный прайс-лист</div>
+        <div class="card">
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                <tr style="border-bottom: 1px solid #333; color: var(--accent);">
+                    <th style="text-align: left; padding: 10px;">Ранг</th>
+                    <th style="text-align: right; padding: 10px;">Цена</th>
+                </tr>
+                <tr><td style="padding: 10px;">Silver -> Gold</td><td style="text-align: right;">45г</td></tr>
+                <tr><td style="padding: 10px;">Gold -> Phoenix</td><td style="text-align: right;">60г</td></tr>
+                <tr><td style="padding: 10px;">Phoenix -> Ranger</td><td style="text-align: right;">75г</td></tr>
+                <tr><td style="padding: 10px;">Ranger -> Champion</td><td style="text-align: right;">90г</td></tr>
+                <tr><td style="padding: 10px;">Champion -> Master</td><td style="text-align: right;">110г</td></tr>
+                <tr><td style="padding: 10px;">Master -> Legend</td><td style="text-align: right;">250г+</td></tr>
+            </table>
+        </div>
+        <p style="font-size: 11px; color: var(--text-dim); text-align: center;">*Цены указаны за одно полное звание</p>
     </div>
 
-    <button id="main-btn" disabled>Оформить заказ</button>
+    <div id="page-admin" class="page">
+        <div class="section-title">Панель управления</div>
+        <div class="admin-stat">
+            <div class="stat-item">
+                <div class="stat-val">24</div>
+                <div style="font-size: 10px;">Заказов</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-val">12.5к</div>
+                <div style="font-size: 10px;">Оборот (г)</div>
+            </div>
+        </div>
+        
+        <div class="section-title">Активные заказы</div>
+        <div id="admin-orders-list">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="font-weight: 800;">ID: 55678122</span>
+                    <span class="badge badge-new">Новый</span>
+                </div>
+                <div style="font-size: 12px; margin-top: 5px; color: var(--text-dim);">Gold -> Phoenix (Пати)</div>
+                <button style="margin-top: 10px; background: var(--success); border: none; padding: 5px 10px; border-radius: 5px; font-weight: 800;">ПРИНЯТЬ</button>
+            </div>
+        </div>
+    </div>
 
+    <nav class="nav-bar">
+        <div class="nav-item active" onclick="showPage('shop', this)"><span>🛒</span> МАГАЗИН</div>
+        <div class="nav-item" onclick="showPage('table', this)"><span>📊</span> ТАБЛИЦА</div>
+        <div class="nav-item" id="admin-tab" style="display: none;" onclick="showPage('admin', this)"><span>👑</span> АДМИН</div>
+    </nav>
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
-        tg.headerColor = '#0d0d0d';
-        tg.backgroundColor = '#0d0d0d';
+        tg.enableClosingConfirmation();
 
-        // Данные из твоего Python файла
-        const services = [
-            {id: 'S1', name: 'Silver to Gold', price: '45г / 20грн'},
-            {id: 'S2', name: 'Gold to Phoenix', price: '60г / 25грн'},
-            {id: 'S3', name: 'Phoenix to Ranger', price: '75г / 30грн'},
-            {id: 'S4', name: 'Ranger to Champion', price: '85г / 35грн'},
-            {id: 'S5', name: 'Champion to Master', price: '95г / 40грн'},
-            {id: 'S6', name: 'Master to Elite', price: '120г / 45грн'},
-            {id: 'S7', name: 'Elite to Legend', price: '190-235г / 85грн'},
-            {id: 'SMULTI', name: 'Хочу 2+ звания', price: '0,7г - 1 ммр'}
-        ];
+        // Настройка темы под Telegram
+        tg.headerColor = '#1a0000';
+        tg.backgroundColor = '#080808';
 
-        const modes = [
-            {id: 'M1', name: 'ММ (5x5)'},
-            {id: 'M2', name: 'Напарники'},
-            {id: 'M3', name: 'Дуэли'}
-        ];
+        let currentMethod = 'account';
+        const adminId = 6477651244; // Твой ID для отображения админки
 
-        let selectedService = null;
-        let selectedMode = 'M1';
-
-        // Отрисовка услуг
-        const servicesList = document.getElementById('services-list');
-        services.forEach(s => {
-            const card = document.createElement('div');
-            card.className = 'card';
-            card.innerHTML = `
-                <div class="card-info">
-                    <span class="card-title">${s.name}</span>
-                    <span class="card-price">${s.price}</span>
-                </div>
-            `;
-            card.onclick = () => {
-                tg.HapticFeedback.impactOccurred('light');
-                document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
-                card.classList.add('selected');
-                selectedService = s.id;
-                validate();
-            };
-            servicesList.appendChild(card);
-        });
-
-        // Отрисовка режимов
-        const modesList = document.getElementById('modes-list');
-        modes.forEach(m => {
-            const mCard = document.createElement('div');
-            mCard.className = 'mode-card' + (m.id === 'M1' ? ' selected' : '');
-            mCard.innerText = m.name;
-            mCard.onclick = () => {
-                tg.HapticFeedback.selectionChanged();
-                document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
-                mCard.classList.add('selected');
-                selectedMode = m.id;
-            };
-            modesList.appendChild(mCard);
-        });
-
-        const input = document.getElementById('standoff-id');
-        const mainBtn = document.getElementById('main-btn');
-
-        function validate() {
-            mainBtn.disabled = !(selectedService && input.value.length > 4);
+        // Проверка прав админа
+        if (tg.initDataUnsafe?.user?.id === adminId) {
+            document.getElementById('admin-tab').style.display = 'flex';
         }
 
-        input.oninput = validate;
+        function showPage(pageId, el) {
+            // Переключение вкладок
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('page-' + pageId).classList.add('active');
+            
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            el.classList.add('active');
+            
+            tg.HapticFeedback.impactOccurred('light');
+        }
 
-        mainBtn.onclick = () => {
+        function selectMethod(method) {
+            currentMethod = method;
+            document.getElementById('m-acc').classList.toggle('selected', method === 'account');
+            document.getElementById('m-party').classList.toggle('selected', method === 'party');
+            
+            const priceEl = document.getElementById('price-display');
+            if(method === 'party') {
+                priceEl.innerText = "ИТОГО: ДОГОВОРНАЯ (ПАТИ)";
+                priceEl.style.color = "#f1c40f";
+            } else {
+                priceEl.innerText = "ИТОГО: ПО ПРАЙСУ";
+                priceEl.style.color = "var(--accent)";
+            }
+            tg.HapticFeedback.selectionChanged();
+        }
+
+        function confirmOrder() {
+            const rankFrom = document.getElementById('rank-from').value;
+            const rankTo = document.getElementById('rank-to').value;
+            const standoffId = document.getElementById('user-id').value;
+
+            if (standoffId.length < 5) {
+                tg.showAlert("Введите корректный Standoff ID!");
+                return;
+            }
+
             const data = {
-                service_id: selectedService,
-                standoff_id: input.value,
-                mode_id: selectedMode
+                type: "order_boost",
+                from: rankFrom,
+                to: rankTo,
+                method: currentMethod,
+                id: standoffId,
+                user_name: tg.initDataUnsafe?.user?.username || "Unknown"
             };
-            tg.HapticFeedback.notificationOccurred('success');
-            tg.sendData(JSON.stringify(data));
-        };
+
+            tg.showConfirm(`Подтверждаете заказ: ${rankFrom} -> ${rankTo}?`, (ok) => {
+                if (ok) {
+                    tg.sendData(JSON.stringify(data));
+                    tg.HapticFeedback.notificationOccurred('success');
+                }
+            });
+        }
+
+        // Информируем админа о новых заказах (симуляция для демонстрации интерфейса)
+        function admin_acceptOrder(orderId) {
+            tg.HapticFeedback.impactOccurred('medium');
+            tg.showPopup({
+                title: 'Заказ принят',
+                message: 'Пользователь получит уведомление в боте.',
+                buttons: [{type: 'ok'}]
+            });
+        }
     </script>
 </body>
 </html>
