@@ -382,7 +382,7 @@
 
         function submitOrder() {
             const orderData = {
-                action: "create_order",
+                action: "create_order_request", // Меняем название экшена
                 service_id: document.getElementById('shop-service').value,
                 mode: document.getElementById('shop-mode').value,
                 method: currentMethod,
@@ -391,14 +391,15 @@
                 description: document.getElementById('shop-desc').value || ""
             };
 
-            if (!orderData.standoff_id) {
-                tg.showAlert("❌ Пожалуйста, введите ваш игровой ID!");
+            if (!orderData.standoff_id || orderData.standoff_id.length < 5) {
+                tg.showAlert("❌ Пожалуйста, введите ваш реальный ID в Standoff 2!");
                 return;
             }
 
-            tg.showConfirm(`Подтвердить заказ и списать баланс?`, (ok) => {
+            tg.showConfirm(`Отправить запрос на буст? После подтверждения админ пришлет скин для оплаты в чат.`, (ok) => {
                 if (ok) {
                     tg.sendData(JSON.stringify(orderData));
+                    // Приложение закроется само после отправки данных
                 }
             });
         }
