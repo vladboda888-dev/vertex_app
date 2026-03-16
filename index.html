@@ -456,9 +456,9 @@
         // 8. Пример получения данных (Для интеграции с твоим Python скриптом)
         // Эти данные бот должен передать при открытии приложения через URL или стартовые параметры
         window.addEventListener('load', () => {
-            // Здесь можно добавить логику парсинга баланса из URL, если передаешь его из бота
-            // Например: const urlParams = new URLSearchParams(window.location.search);
-            // document.getElementById('prof-bal').innerText = urlParams.get('bal') || '0';
+            const urlParams = new URLSearchParams(window.location.search);
+            document.getElementById('prof-bal').innerText = (urlParams.get('bal') || '0') + " G";
+            document.getElementById('prof-xp').innerText = urlParams.get('xp') || '0';
         });
     </script>
 </body>
