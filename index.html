@@ -252,7 +252,7 @@
 
         <div class="section-title">Ваши данные</div>
         <input type="number" id="s-id" placeholder="ID Standoff 2">
-        <input type="text" id="s-desc" placeholder="Комментарий (Регион ваш, и с ранга до ранга который хотите)">
+        <input type="text" id="s-desc" placeholder="Дополнительно (Регион, с ранга до ранга)">
         <button class="btn" onclick="sendOrder()">Оформить заказ</button>
     </div>
 
@@ -381,8 +381,33 @@
                 <div style="font-size: 16px; font-weight: 800; color: #00aaff; margin-bottom: 5px;">✈️ Выживание Пилота</div>
                 <div style="font-size: 11px; color: var(--text-secondary);">Уклоняйся от ракет ровно 60 секунд. Хардкор.<br><span style="color:var(--success); font-weight:800;">Награда: 35 XP</span></div>
             </div>
+            <div class="game-menu-card" style="border-color: rgba(255, 200, 0, 0.3);" onclick="startWheel()">
+                <div style="font-size: 16px; font-weight: 800; color: var(--gold); margin-bottom: 5px;">🎰 Колесо Фортуны</div>
+                <div style="font-size: 11px; color: var(--text-secondary);">Крути рулетку 1 раз в день.<br><span style="color:var(--success); font-weight:800;">Награда: До 100 Gold</span></div>
+            </div>
+            <div class="game-menu-card" style="border-color: rgba(255, 51, 51, 0.3);" onclick="startParkourGame()">
+                <div style="font-size: 16px; font-weight: 800; color: #ff3333; margin-bottom: 5px;">🏃 Паркур (Хардкор)</div>
+                <div style="font-size: 11px; color: var(--text-secondary);">Перепрыгивай препятствия 30 секунд.<br><span style="color:var(--success); font-weight:800;">Награда: 75 XP</span></div>
+            </div>
         </div>
 
+         <div id="wheel-ui" style="display: none; text-align: center; padding: 20px;">
+            <div class="section-title" style="color: var(--gold);">Колесо Фортуны</div>
+            <div id="wheel-result" style="font-size: 24px; font-weight: 900; color: #fff; margin: 40px 0; height: 30px; font-family: 'Orbitron';">🎰 Нажми старт 🎰</div>
+            <button class="btn" style="background: var(--gold); color: #000; font-weight: 900;" id="wheel-btn" onclick="spinWheel()">КРУТИТЬ РУЛЕТКУ</button>
+        </div>
+
+        <div id="parkour-ui" style="display: none;">
+            <div class="game-stats" style="color: #ff3333; border-color: rgba(255, 51, 51, 0.3);">
+                <div>ВЫЖИВАНИЕ</div>
+                <div>ОСТАЛОСЬ: <span id="parkour-time" style="color: #fff; font-weight:900;">30</span>с</div>
+            </div>
+            <div class="plane-arena" id="parkour-arena" style="border-color: #ff3333; box-shadow: inset 0 0 20px rgba(255, 51, 51, 0.1);" onclick="parkourJump()">
+                <div id="pk-player" style="position: absolute; bottom: 0; left: 20px; width: 30px; height: 30px; background: #00aaff; border-radius: 4px; box-shadow: 0 0 10px #00aaff; transition: bottom 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);"></div>
+            </div>
+            <div style="text-align:center; font-size:10px; color:#aaa; margin-top:10px;">Нажимай на арену, чтобы прыгать!</div>
+        </div>
+        
         <div id="aim-ui" style="display: none;">
             <div class="game-stats">
                 <div>СЧЕТ: <span id="aim-score" style="color: #fff;">0</span>/15</div>
@@ -479,7 +504,9 @@
         let userId = 0;
         let canAim = "false";
         let canPlane = "false";
-
+        let canWheel = "false";
+        let canParkour = "false";
+        
         let gameScore = 0;
         let gameTime = 20;
         let gameTimerId = null;
@@ -507,7 +534,9 @@
 
             canAim = params.get('aim') || "false";
             canPlane = params.get('plane') || "false";
-
+            canWheel = params.get('wheel') || "false";
+            canParkour = params.get('pk') || "false";
+            
             const role = params.get('role');
             userId = params.get('id') || '000000';
             
@@ -830,6 +859,134 @@
             }
         }
 
+        // --- КОЛЕСО ФОРТУНЫ ---
+        function startWheel() {
+            if(canWheel === "false") return showToast("Доступно 1 раз в день!", "error");
+            document.getElementById('game-menu').style.display = 'none';
+            document.getElementById('wheel-ui').style.display = 'block';
+        }
+
+        function spinWheel() {
+            const btn = document.getElementById('wheel-btn');
+            btn.disabled = true; btn.style.opacity = '0.5';
+            
+            // Настройка шансов (weight)
+            const outcomes = [
+                { text: "15 Gold", type: "gold", val: 15, weight: 15 },
+                { text: "ПУСТОТА", type: "empty", val: 0, weight: 55 },
+                { text: "50 XP", type: "xp", val: 50, weight: 28 },
+                { text: "100 Gold", type: "gold", val: 100, weight: 2 }
+            ];
+            
+            let ticks = 0;
+            const resEl = document.getElementById('wheel-result');
+            const interval = setInterval(() => {
+                const randomItem = outcomes[Math.floor(Math.random() * outcomes.length)];
+                resEl.innerText = randomItem.text;
+                resEl.style.color = randomItem.type === 'gold' ? 'var(--gold)' : (randomItem.type === 'empty' ? '#888' : '#00aaff');
+                tg.HapticFeedback.impactOccurred('light');
+                ticks++;
+                if(ticks > 25) {
+                    clearInterval(interval);
+                    const rand = Math.random() * 100;
+                    let cum = 0;
+                    let finalRes = outcomes[1]; 
+                    for(let o of outcomes) {
+                        cum += o.weight;
+                        if(rand <= cum) { finalRes = o; break; }
+                    }
+                    resEl.innerText = finalRes.text;
+                    resEl.style.color = finalRes.type === 'gold' ? 'var(--gold)' : (finalRes.type === 'empty' ? '#ff3333' : '#00aaff');
+                    tg.HapticFeedback.notificationOccurred(finalRes.type === 'empty' ? 'error' : 'success');
+                    
+                    setTimeout(() => {
+                        tg.showAlert(`Результат: ${finalRes.text}. Приложение закроется для сохранения.`, () => {
+                            tg.sendData(JSON.stringify({ action: "wheel_result", reward_type: finalRes.type, reward_val: finalRes.val }));
+                            tg.close();
+                        });
+                    }, 1500);
+                }
+            }, 100);
+        }
+
+        // --- ХАРДКОР ПАРКУР ---
+        let pkInterval, obInterval;
+        let isJumping = false;
+        
+        function startParkourGame() {
+            if(canParkour === "false") return showToast("Доступно 1 раз в день!", "error");
+            document.getElementById('game-menu').style.display = 'none';
+            document.getElementById('parkour-ui').style.display = 'block';
+            gameTime = 30; isGameActive = true;
+            document.getElementById('parkour-time').innerText = gameTime;
+            
+            gameTimerId = setInterval(() => {
+                gameTime--; document.getElementById('parkour-time').innerText = gameTime;
+                if(gameTime <= 0) endParkourGame(true);
+            }, 1000);
+
+            obInterval = setInterval(spawnObstacle, 700); // Препятствия спавнятся очень быстро
+            pkInterval = setInterval(checkPkCollision, 20);
+        }
+        
+        function parkourJump() {
+            if(!isGameActive || isJumping) return;
+            isJumping = true;
+            const player = document.getElementById('pk-player');
+            player.style.bottom = '90px'; // Высота прыжка
+            tg.HapticFeedback.impactOccurred('light');
+            setTimeout(() => {
+                player.style.bottom = '0px';
+                setTimeout(() => { isJumping = false; }, 300); // Время восстановления прыжка
+            }, 350);
+        }
+        
+        function spawnObstacle() {
+            if(!isGameActive) return;
+            const arena = document.getElementById('parkour-arena');
+            const ob = document.createElement('div');
+            ob.className = 'pk-obstacle';
+            ob.style.cssText = 'position: absolute; bottom: 0; right: -20px; width: 25px; height: 35px; background: #ff3333; border-radius: 4px; box-shadow: 0 0 10px #ff3333;';
+            arena.appendChild(ob);
+            
+            let pos = -20;
+            const move = setInterval(() => {
+                if(!isGameActive) { clearInterval(move); ob.remove(); return; }
+                pos += 10; // Скорость движения (очень быстро)
+                ob.style.right = pos + 'px';
+                if(pos > arena.clientWidth) { clearInterval(move); ob.remove(); }
+            }, 20);
+        }
+        
+        function checkPkCollision() {
+            const player = document.getElementById('pk-player').getBoundingClientRect();
+            document.querySelectorAll('.pk-obstacle').forEach(ob => {
+                const br = ob.getBoundingClientRect();
+                if (br.left < player.right - 10 && br.right > player.left + 10 && br.top < player.bottom - 5 && br.bottom > player.top + 5) {
+                    endParkourGame(false);
+                }
+            });
+        }
+        
+        function endParkourGame(win) {
+            isGameActive = false; clearInterval(gameTimerId); clearInterval(obInterval); clearInterval(pkInterval);
+            document.querySelectorAll('.pk-obstacle').forEach(b => b.remove());
+            document.getElementById('parkour-ui').style.display = 'none';
+            document.getElementById('game-menu').style.display = 'block';
+            canParkour = "false";
+
+            if(win) {
+                tg.showAlert("Паркур пройден! Вы просто киберспортсмен. Сохраняем результат.", () => {
+                    tg.sendData(JSON.stringify({ action: "minigame_win", game: "parkour" }));
+                });
+            } else {
+                tg.HapticFeedback.notificationOccurred('error');
+                tg.showAlert(`Вы разбились об куб! Продержались ${30 - gameTime} сек. Приложение закроется.`, () => {
+                    tg.sendData(JSON.stringify({ action: "minigame_lose", game: "parkour" }));
+                });
+            }
+        }
+        
         function sendOrder() {
             const activeBox = document.getElementById('my-active-order');
             if (activeBox && activeBox.style.display === 'block') {
