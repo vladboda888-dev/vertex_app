@@ -385,15 +385,6 @@
         </div>
     </div>
 
-    <div id="p-booster" class="page">
-        <div class="section-title" style="color: #00aaff;">Панель Бустера</div>
-        <div class="booster-tabs">
-            <div class="b-tab active">Свободные заказы</div>
-        </div>
-        <div id="booster-orders">
-            </div>
-    </div>
-
     <div id="p-xpshop" class="page">
         <div class="section-title">Обмен XP на Голду</div>
         <div class="card">
@@ -523,6 +514,53 @@
             const refEl = document.getElementById('ref-link');
             if(refEl) refEl.innerText = `https://t.me/Vertex8_Bot?start=${userId}`;
 
+            // ПАРСИНГ АДМИН СТАТИСТИКИ
+            const sysStats = params.get('stats');
+            if(sysStats && (role === 'admin' || role === 'owner')) {
+                const [uCount, bCount, oCount] = sysStats.split(':');
+                const elU = document.getElementById('adm-users');
+                const elB = document.getElementById('adm-boosters');
+                const elO = document.getElementById('adm-orders');
+                if(elU) elU.innerText = uCount || "0";
+                if(elB) elB.innerText = bCount || "0";
+                if(elO) elO.innerText = oCount || "0";
+            }
+
+            // ПАРСИНГ РАСШИРЕННЫХ ЗАКАЗОВ БУСТЕРА
+            const ordersData = params.get('orders');
+            const ordersBox = document.getElementById('booster-orders');
+            if(ordersData && role !== 'client' && ordersBox) {
+                ordersBox.innerHTML = "";
+                const orders = ordersData.split('|');
+                
+                const elBOrders = document.getElementById('b-stat-orders');
+                if(elBOrders) elBOrders.innerText = orders[0] === "" ? "0" : orders.length;
+
+                orders.forEach(o => {
+                    if(!o) return;
+                    // Ожидаемый формат: id:service:price:standoff_id:client_username
+                    const [oid, svc, price, stId, clientName] = o.split(':');
+                    ordersBox.innerHTML += `
+                        <div class="order-card">
+                            <div class="order-header">
+                                <span class="order-id">#${oid}</span>
+                                <span class="order-price">${price}</span>
+                            </div>
+                            <div class="order-tags">
+                                <span class="o-tag tag-svc">ОЖИДАЕТ БУСТЕРА</span>
+                            </div>
+                            <div style="margin-bottom: 12px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px;">
+                                <div class="order-detail"><i>👤</i> Клиент: @${clientName || "Скрыт"}</div>
+                                <div class="order-detail"><i>🎯</i> ID: ${stId || "Не указан"}</div>
+                                <div class="order-detail"><i>🏆</i> Услуга: ${svc || "Буст"}</div>
+                            </div>
+                            <button class="btn" style="background: linear-gradient(45deg, #0055ff, #00aaff); border-radius: 10px; padding: 12px; font-size: 12px;" onclick="takeOrder(${oid})">ПРИНЯТЬ ЗАКАЗ</button>
+                        </div>`;
+                });
+            } else if (role !== 'client' && ordersBox) {
+                ordersBox.innerHTML = "<div style='text-align:center; color:#777; padding:20px;'>Нет доступных заказов</div>";
+            }
+            
             // ПАРСИНГ ТАБЛИЦЫ ЛИДЕРОВ (С ПОДИУМОМ)
             const topData = params.get('top');
             const leaderList = document.getElementById('leader-list');
