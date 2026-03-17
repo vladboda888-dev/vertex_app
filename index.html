@@ -276,7 +276,6 @@
         <div class="grid-2">
             <button class="btn btn-dark" onclick="sendAction('get_daily')">🎁 Бонус</button>
             <button class="btn btn-dark" onclick="showTab('xpshop')">🏪 Магазин XP</button>
-            <button class="btn btn-outline" style="border-color: #00aaff; color: #00aaff;" onclick="refreshApp()">🔄 Обновить данные</button>
         </div>
         
         <div class="section-title">Достижения</div>
@@ -496,7 +495,6 @@
                 if(fillEl) fillEl.style.width = progress + "%";
             }, 300);
 
-            // Раздельная проверка игр
             canAim = params.get('aim') || "false";
             canPlane = params.get('plane') || "false";
 
@@ -516,29 +514,39 @@
             const refEl = document.getElementById('ref-link');
             if(refEl) refEl.innerText = `https://t.me/Vertex8_Bot?start=${userId}`;
 
-            // Парсинг активного заказа пользователя
+            const sysStats = params.get('stats');
+            if(sysStats && (role === 'admin' || role === 'owner')) {
+                const [uCount, bCount, oCount] = sysStats.split(':');
+                const elU = document.getElementById('adm-users');
+                const elB = document.getElementById('adm-boosters');
+                const elO = document.getElementById('adm-orders');
+                if(elU) elU.innerText = uCount || "0";
+                if(elB) elB.innerText = bCount || "0";
+                if(elO) elO.innerText = oCount || "0";
+            }
+
             const myOrder = params.get('myorder');
             if(myOrder && myOrder !== "") {
-                document.getElementById('my-active-order').style.display = 'block';
+                const actBox = document.getElementById('my-active-order');
+                if(actBox) actBox.style.display = 'block';
                 const [oid, ostatus, oprice] = myOrder.split(':');
-                document.getElementById('my-o-id').innerText = oid;
+                const idEl = document.getElementById('my-o-id');
+                if(idEl) idEl.innerText = oid;
                 const stEl = document.getElementById('my-o-status');
                 const btnCancel = document.getElementById('btn-cancel-order');
                 const btnRefund = document.getElementById('btn-refund-order');
                 
                 if(ostatus === 'pending' || ostatus === 'awaiting_payment') {
-                    stEl.innerText = "Ожидание админа";
-                    btnCancel.style.display = 'block';
-                    btnRefund.style.display = 'none';
+                    if(stEl) stEl.innerText = "Ожидание админа";
+                    if(btnCancel) btnCancel.style.display = 'block';
+                    if(btnRefund) btnRefund.style.display = 'none';
                 } else if (ostatus === 'working') {
-                    stEl.innerText = "В работе бустером";
-                    stEl.style.color = '#00aaff';
-                    btnCancel.style.display = 'none';
-                    btnRefund.style.display = 'block';
+                    if(stEl) { stEl.innerText = "В работе бустером"; stEl.style.color = '#00aaff'; }
+                    if(btnCancel) btnCancel.style.display = 'none';
+                    if(btnRefund) btnRefund.style.display = 'block';
                 }
             }
 
-            // Парсинг Топа
             const topData = params.get('top');
             const leaderList = document.getElementById('leader-list');
             if(topData && leaderList) {
@@ -563,34 +571,63 @@
                 });
             }
 
-            // Парсинг панели Бустера
+            // ПАРСИНГ РАСШИРЕННЫХ ЗАКАЗОВ БУСТЕРА
             const ordersData = params.get('orders');
             const ordersBox = document.getElementById('booster-orders');
             if(ordersData && role !== 'client' && ordersBox) {
                 ordersBox.innerHTML = "";
                 const orders = ordersData.split('|');
+                
                 const elBOrders = document.getElementById('b-stat-orders');
                 if(elBOrders) elBOrders.innerText = orders[0] === "" ? "0" : orders.length;
 
                 orders.forEach(o => {
                     if(!o) return;
-                    const [oid, svc, price, stId, clientName] = o.split(':');
+                    // Ожидаемый формат: id:service:price:standoff_id:client_username:status:booster_id
+                    const [oid, svc, price, stId, clientName, oStatus, boosterId] = o.split(':');
+                    
+                    let tagText = "ОЖИДАЕТ БУСТЕРА";
+                    let tagColor = "rgba(230, 0, 0, 0.1)";
+                    let tagTextColor = "var(--accent)";
+                    let btnHTML = `<button class="btn" style="background: linear-gradient(45deg, #0055ff, #00aaff); border-radius: 10px; padding: 12px; font-size: 12px;" onclick="takeOrder(${oid})">ПРИНЯТЬ ЗАКАЗ</button>`;
+
+                    // Проверяем статус: если он в работе, меняем дизайн карточки
+                    if (oStatus === 'working') {
+                        tagText = "ВЫПОЛНЯЕТСЯ";
+                        tagColor = "rgba(0, 170, 255, 0.1)";
+                        tagTextColor = "#00aaff";
+                        
+                        // Если заказ взял именно ЭТОТ бустер
+                        if (boosterId === userId) {
+                            btnHTML = `<button class="btn btn-outline" style="border-color: #ff3333; color: #ff3333; border-radius: 10px; padding: 12px; font-size: 12px;" onclick="cancelBoosterOrder(${oid})">ОТМЕНИТЬ ВЫПОЛНЕНИЕ</button>`;
+                        } else {
+                            btnHTML = `<button class="btn" style="background: #333; color: #777; border-radius: 10px; padding: 12px; font-size: 12px;" disabled>ЗАНЯТ ДРУГИМ</button>`;
+                        }
+                    }
+
                     ordersBox.innerHTML += `
                         <div class="order-card">
-                            <div class="order-header"><span class="order-id">#${oid}</span><span class="order-price">${price}</span></div>
-                            <div class="order-tags"><span class="o-tag tag-svc">ОЖИДАЕТ БУСТЕРА</span></div>
+                            <div class="order-header">
+                                <span class="order-id">#${oid}</span>
+                                <span class="order-price">${price}</span>
+                            </div>
+                            <div class="order-tags">
+                                <span class="o-tag tag-svc" style="background: ${tagColor}; color: ${tagTextColor}; border: 1px solid ${tagColor};">${tagText}</span>
+                            </div>
                             <div style="margin-bottom: 12px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px;">
                                 <div class="order-detail"><i>👤</i> Клиент: @${clientName || "Скрыт"}</div>
                                 <div class="order-detail"><i>🎯</i> ID: ${stId || "Не указан"}</div>
                                 <div class="order-detail"><i>🏆</i> Услуга: ${svc || "Буст"}</div>
                             </div>
-                            <button class="btn" style="background: linear-gradient(45deg, #0055ff, #00aaff); border-radius: 10px; padding: 12px; font-size: 12px;" onclick="takeOrder(${oid})">ПРИНЯТЬ ЗАКАЗ</button>
+                            ${btnHTML}
                         </div>`;
                 });
             } else if (role !== 'client' && ordersBox) {
                 ordersBox.innerHTML = "<div style='text-align:center; color:#777; padding:20px;'>Нет доступных заказов</div>";
             }
         });
+
+        function refreshApp() { tg.sendData(JSON.stringify({ action: "refresh_request" })); tg.close(); }
 
         function selSvc(el, val) {
             document.querySelectorAll('#service-grid .card').forEach(c => c.classList.remove('selected'));
@@ -626,24 +663,15 @@
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
             
-            // Если это успешное действие - добавляем твою фразу
             let finalMsg = msg;
-            if(type === 'success') {
-                finalMsg = msg + "<br><span style='font-size: 9px; opacity: 0.8;'>Напишите ещё раз /start для обновления результата</span>";
-            }
+            if(type === 'success') finalMsg = msg + "<br><span style='font-size: 9px; opacity: 0.8;'>Напишите ещё раз /start для обновления результата</span>";
             
             toast.innerHTML = type === 'success' ? `✅ ${finalMsg}` : type === 'gold' ? `💰 ${msg}` : `❌ ${msg}`;
             container.appendChild(toast);
-            
             tg.HapticFeedback.notificationOccurred(type === 'error' ? 'error' : 'success');
-
-            setTimeout(() => {
-                toast.style.animation = 'slideInRight 0.3s forwards reverse';
-                setTimeout(() => toast.remove(), 300);
-            }, 4000); // Увеличил время до 4 секунд, чтобы успели прочитать
+            setTimeout(() => { toast.style.animation = 'slideInRight 0.3s forwards reverse'; setTimeout(() => toast.remove(), 300); }, 4000);
         }
 
-        // --- ЛОГИКА АИМ ТРЕНИРОВКИ ---
         function startAimGame() {
             if(canAim === "false") return showToast("Доступно 1 раз в день!", "error");
             document.getElementById('game-menu').style.display = 'none';
@@ -694,7 +722,6 @@
             }
         }
 
-        // --- ЛОГИКА САМОЛЕТА ---
         let planeInterval, bulletInterval;
         let pX = 50, pY = 80;
 
@@ -781,8 +808,13 @@
             }
         }
 
-        // --- УПРАВЛЕНИЕ ЗАКАЗАМИ ---
         function sendOrder() {
+            // ЖЕСТКАЯ ПРОВЕРКА ЛИМИТА (Если блок заказа видим - отправить нельзя)
+            const activeBox = document.getElementById('my-active-order');
+            if (activeBox && activeBox.style.display === 'block') {
+                return showToast("У вас уже есть активный заказ! Проверьте профиль.", "error");
+            }
+
             const stIdVal = document.getElementById('s-id').value;
             if(!stIdVal || stIdVal.length < 5) return showToast("Введите корректный ID Standoff 2!", "error");
             
@@ -794,7 +826,7 @@
                 standoff_id: stIdVal,
                 description: document.getElementById('s-desc') ? document.getElementById('s-desc').value : ""
             };
-            tg.showConfirm(`Отправить запрос? Убедись, что у тебя нет активных заказов.`, (ok) => {
+            tg.showConfirm(`Отправить запрос?`, (ok) => {
                 if (ok) { tg.sendData(JSON.stringify(data)); tg.close(); }
             });
         }
@@ -815,33 +847,7 @@
             tg.showConfirm(`Взять заказ #${oid} в работу?`, (ok) => {
                 if(ok) { tg.sendData(JSON.stringify({ action: "booster_take", order_id: oid })); tg.close(); }
             });
-        }
-
-        // --- УТИЛИТЫ ---
-        function exchangeXP(pkg, cost) {
-            if(userXP < cost) return showToast(`Недостаточно XP! Нужно ${cost}`, "error");
-            tg.showConfirm(`Обменять ${cost} XP на Gold?`, (ok) => {
-                if (ok) tg.sendData(JSON.stringify({ action: "exchange_xp", package: pkg }));
-            });
-        }
-        function usePromo() {
-            const val = document.getElementById('promo-val').value;
-            if(!val) return showToast("Введите код!", "error");
-            tg.sendData(JSON.stringify({ action: "use_promo", code: val }));
-        }
-        function sendAction(act) { tg.sendData(JSON.stringify({ action: act })); }
-        function admCmd(type) { tg.sendData(JSON.stringify({ action: "admin_action", type: type })); }
-        function copyRef() {
-            const link = document.getElementById('ref-link').innerText;
-            const el = document.createElement('textarea'); el.value = link;
-            document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el);
-            showToast("Ссылка скопирована!", "success");
-        }
-        function refreshApp() {
-            tg.sendData(JSON.stringify({ action: "refresh_request" }));
-            tg.close();
-        }
-    </script>
+    
 
     </script>
 </body>
