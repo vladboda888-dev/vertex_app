@@ -74,7 +74,7 @@
         .news-ava { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; }
         .news-title { font-size: 13px; font-weight: 800; color: #fff; }
         .news-banner { width: 100%; max-height: 150px; object-fit: cover; }
-        .news-text { padding: 12px; font-size: 11px; color: #ccc; line-height: 1.4; }
+        .news-text { padding: 12px; font-size: 11px; color: #ccc; line-height: 1.4; white-space: pre-wrap; }
         
         /* Шапка */
         header {
@@ -382,6 +382,13 @@
             <button class="btn btn-dark" onclick="admCmd('ban')">🚫 Бан/Разбан</button>
             <button class="btn btn-danger" onclick="admCmd('del_order')">🗑 Удал. заказ</button>
             <button class="btn btn-dark" onclick="admCmd('post_news')">📰 Пост в Новости</button>
+        </div>
+        <div class="grid-2" style="margin-top: 10px;">
+            <button class="btn btn-dark" onclick="admCmd('check_user')">🔍 Чекнуть юзера</button>
+            <button class="btn btn-danger" onclick="admCmd('del_news')">🗑 Удал. новость</button>
+        </div>
+        <div class="grid-2" style="margin-top: 10px;">
+            <button class="btn btn-danger" onclick="admCmd('clear_chat')" style="grid-column: span 2;">🧹 Полностью очистить чат</button>
         </div>
         <div class="grid-2" style="margin-top: 10px;">
             <button class="btn btn-danger" onclick="admCmd('clear_db')" style="grid-column: span 2;">🧹 Очистка старых заказов из БД</button>
