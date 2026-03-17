@@ -239,15 +239,21 @@
 
         <div class="section-title">Метод буста</div>
         <div class="grid-services" id="method-grid">
-            <div class="card card-clickable selected card-svc" onclick="selMeth(this, 'account')"><div class="svc-name" style="margin:0;">Вход в аккаунт</div></div>
-            <div class="card card-clickable card-svc" onclick="selMeth(this, 'party')"><div class="svc-name" style="margin:0;">В лобби (+35%)</div></div>
+            <div class="card card-clickable selected card-svc" onclick="selMeth(this, 'account')" style="padding: 15px 10px;">
+                <div class="svc-name" style="font-size: 12px;">Заход в акк</div>
+                <div style="font-size: 8px; color: var(--text-secondary); margin-top: 5px; line-height: 1.2;">Вы даёте данные от аккаунта, мы заходим и выполняем быстрее</div>
+            </div>
+            <div class="card card-clickable card-svc" onclick="selMeth(this, 'party')" style="padding: 15px 10px;">
+                <div class="svc-name" style="font-size: 12px;">В пати (+20%)</div>
+                <div style="font-size: 8px; color: var(--text-secondary); margin-top: 5px; line-height: 1.2;">Буст будет медленнее, а также затратнее для клиента</div>
+            </div>
         </div>
         <input type="hidden" id="s-method" value="account">
 
         <div class="section-title">Ваши данные</div>
         <input type="number" id="s-id" placeholder="ID Standoff 2">
-        <input type="text" id="s-desc" placeholder="Комментарий (регион и т.д.)">
-        <button class="btn" onclick="sendOrder()">Оформить заявку</button>
+        <input type="text" id="s-desc" placeholder="Комментарий (Регион ваш, и с ранга до ранга который хотите)">
+        <button class="btn" onclick="sendOrder()">Оформить заказ</button>
     </div>
 
     <div id="p-profile" class="page">
@@ -591,13 +597,15 @@
                 orders.forEach(o => {
                     if(!o) return;
                     // Ожидаемый формат: id:service:price:standoff_id:client_username:status:booster_id:booster_name:description
-                    const [oid, svc, price, stId, clientName, oStatus, boosterId, boosterName, desc] = o.split(':');
+                    // Ожидаемый формат: id:service:price:standoff_id:client_username:status:booster_id:booster_name:description:method
+                    const [oid, svc, price, stId, clientName, oStatus, boosterId, boosterName, desc, method] = o.split(':');
                     
                     let tagText = "ОЖИДАЕТ БУСТЕРА";
                     let tagColor = "rgba(230, 0, 0, 0.1)";
                     let tagTextColor = "var(--accent)";
                     let btnHTML = `<button class="btn" style="background: linear-gradient(45deg, #0055ff, #00aaff); border-radius: 10px; padding: 12px; font-size: 12px;" onclick="takeOrder(${oid})">ПРИНЯТЬ ЗАКАЗ</button>`;
                     let workerInfo = "";
+                    let methodText = method === 'party' ? "В лобби (Пати)" : "Заход в аккаунт";
 
                     if (oStatus === 'working') {
                         tagText = "ВЫПОЛНЯЕТСЯ";
@@ -606,7 +614,11 @@
                         workerInfo = `<div class="order-detail" style="color:#00aaff;"><i>⚡</i> Бустер: @${boosterName}</div>`;
                         
                         if (boosterId === userId) {
-                            btnHTML = `<button class="btn btn-outline" style="border-color: #ff3333; color: #ff3333; border-radius: 10px; padding: 12px; font-size: 12px;" onclick="cancelBoosterOrder(${oid})">ОТМЕНИТЬ ВЫПОЛНЕНИЕ</button>`;
+                            btnHTML = `
+                            <div style="display:flex; gap:5px;">
+                                <button class="btn" style="flex:1; background: var(--success); color: #000; border-radius: 10px; padding: 12px; font-size: 11px; font-weight:800;" onclick="completeBoosterOrder(${oid})">ВЫПОЛНЕНО</button>
+                                <button class="btn btn-outline" style="flex:1; border-color: #ff3333; color: #ff3333; border-radius: 10px; padding: 12px; font-size: 11px;" onclick="cancelBoosterOrder(${oid})">ОТМЕНИТЬ</button>
+                            </div>`;
                         } else {
                             btnHTML = `<button class="btn" style="background: #333; color: #777; border-radius: 10px; padding: 12px; font-size: 12px;" disabled>ЗАНЯТ ДРУГИМ</button>`;
                         }
@@ -624,6 +636,7 @@
                             <div style="margin-bottom: 12px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px;">
                                 <div class="order-detail"><i>👤</i> Клиент: @${clientName || "Скрыт"}</div>
                                 <div class="order-detail"><i>🎯</i> ID: ${stId || "Не указан"}</div>
+                                <div class="order-detail"><i>🎮</i> Метод: ${methodText}</div>
                                 <div class="order-detail"><i>💬</i> Коммент: ${desc || "Нет"}</div>
                                 <div class="order-detail"><i>🏆</i> Услуга: ${svc || "Буст"}</div>
                                 ${workerInfo}
@@ -882,6 +895,16 @@
             });
         }
 
+        function completeBoosterOrder(oid) {
+            tg.showConfirm(`Подтвердить выполнение #${oid}? Тебе нужно будет отправить скриншот в чат с ботом.`, (ok) => {
+                if(ok) { 
+                    tg.showAlert("📸 Приложение закроется. Отправь скриншот выполненной работы боту прямо сейчас!", () => {
+                        tg.sendData(JSON.stringify({ action: "booster_complete", order_id: oid })); 
+                    });
+                }
+            });
+        }
+        
         function exchangeXP(pkg, cost) {
             if(userXP < cost) return showToast(`Недостаточно XP! Нужно ${cost}`, "error");
             tg.showConfirm(`Обменять ${cost} XP на Gold?`, (ok) => {
