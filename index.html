@@ -195,7 +195,7 @@
     <div id="toast-container"></div>
 
     <header>
-        <div class="logo">VERTEX</div>
+        <div class="logo">VERTEX BOOST</div>
         <div class="user-badge" id="u-role-badge">ИГРОК</div>
     </header>
 
@@ -556,15 +556,19 @@
                     if(!p) return;
                     const [name, xp] = p.split(':');
                     const shortName = name.length > 7 ? name.substring(0, 7) + ".." : name;
+                    
+                    // Обновленный дизайн подиума (по центру, с опытом)
+                    const podiumHTML = `<div style="display:flex; flex-direction:column; align-items:center;"><div style="font-size:10px; color:#fff; margin-bottom:2px; font-weight:700;">${shortName}</div><div style="font-size:20px; line-height:1;">${index + 1}</div><div style="font-size:8px; margin-top:4px; color:var(--gold);">${xp} XP</div></div>`;
+                    
                     if (index === 0) {
                         const r1 = document.querySelector('.rank-1 .podium-bar');
-                        if(r1) r1.innerHTML = `<div style="font-size:9px; margin-bottom:4px; color:#fff;">${shortName}</div>1`;
+                        if(r1) r1.innerHTML = podiumHTML;
                     } else if (index === 1) {
                         const r2 = document.querySelector('.rank-2 .podium-bar');
-                        if(r2) r2.innerHTML = `<div style="font-size:9px; margin-bottom:4px; color:#fff;">${shortName}</div>2`;
+                        if(r2) r2.innerHTML = podiumHTML;
                     } else if (index === 2) {
                         const r3 = document.querySelector('.rank-3 .podium-bar');
-                        if(r3) r3.innerHTML = `<div style="font-size:9px; margin-bottom:4px; color:#fff;">${shortName}</div>3`;
+                        if(r3) r3.innerHTML = podiumHTML;
                     } else {
                         leaderList.innerHTML += `<div class="leader-item"><div class="leader-rank">#${index + 1}</div><div class="leader-name">${name}</div><div class="leader-xp">${xp} XP</div></div>`;
                     }
@@ -577,27 +581,26 @@
             if(ordersData && role !== 'client' && ordersBox) {
                 ordersBox.innerHTML = "";
                 const orders = ordersData.split('|');
-                
                 const elBOrders = document.getElementById('b-stat-orders');
                 if(elBOrders) elBOrders.innerText = orders[0] === "" ? "0" : orders.length;
 
                 orders.forEach(o => {
                     if(!o) return;
-                    // Ожидаемый формат: id:service:price:standoff_id:client_username:status:booster_id
-                    const [oid, svc, price, stId, clientName, oStatus, boosterId] = o.split(':');
+                    // Ожидаемый формат: id:service:price:standoff_id:client_username:status:booster_id:booster_name:description
+                    const [oid, svc, price, stId, clientName, oStatus, boosterId, boosterName, desc] = o.split(':');
                     
                     let tagText = "ОЖИДАЕТ БУСТЕРА";
                     let tagColor = "rgba(230, 0, 0, 0.1)";
                     let tagTextColor = "var(--accent)";
                     let btnHTML = `<button class="btn" style="background: linear-gradient(45deg, #0055ff, #00aaff); border-radius: 10px; padding: 12px; font-size: 12px;" onclick="takeOrder(${oid})">ПРИНЯТЬ ЗАКАЗ</button>`;
+                    let workerInfo = "";
 
-                    // Проверяем статус: если он в работе, меняем дизайн карточки
                     if (oStatus === 'working') {
                         tagText = "ВЫПОЛНЯЕТСЯ";
                         tagColor = "rgba(0, 170, 255, 0.1)";
                         tagTextColor = "#00aaff";
+                        workerInfo = `<div class="order-detail" style="color:#00aaff;"><i>⚡</i> Бустер: @${boosterName}</div>`;
                         
-                        // Если заказ взял именно ЭТОТ бустер
                         if (boosterId === userId) {
                             btnHTML = `<button class="btn btn-outline" style="border-color: #ff3333; color: #ff3333; border-radius: 10px; padding: 12px; font-size: 12px;" onclick="cancelBoosterOrder(${oid})">ОТМЕНИТЬ ВЫПОЛНЕНИЕ</button>`;
                         } else {
@@ -617,7 +620,9 @@
                             <div style="margin-bottom: 12px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px;">
                                 <div class="order-detail"><i>👤</i> Клиент: @${clientName || "Скрыт"}</div>
                                 <div class="order-detail"><i>🎯</i> ID: ${stId || "Не указан"}</div>
+                                <div class="order-detail"><i>💬</i> Коммент: ${desc || "Нет"}</div>
                                 <div class="order-detail"><i>🏆</i> Услуга: ${svc || "Буст"}</div>
+                                ${workerInfo}
                             </div>
                             ${btnHTML}
                         </div>`;
@@ -809,12 +814,10 @@
         }
 
         function sendOrder() {
-            // ЖЕСТКАЯ ПРОВЕРКА ЛИМИТА (Если блок заказа видим - отправить нельзя)
             const activeBox = document.getElementById('my-active-order');
             if (activeBox && activeBox.style.display === 'block') {
-                return showToast("У вас уже есть активный заказ! Проверьте профиль.", "error");
+                return showToast("У вас уже есть активный заказ!", "error");
             }
-
             const stIdVal = document.getElementById('s-id').value;
             if(!stIdVal || stIdVal.length < 5) return showToast("Введите корректный ID Standoff 2!", "error");
             
@@ -824,35 +827,54 @@
                 mode: document.getElementById('s-mode') ? document.getElementById('s-mode').value : "M1",
                 method: document.getElementById('s-method') ? document.getElementById('s-method').value : "account",
                 standoff_id: stIdVal,
-                description: document.getElementById('s-desc') ? document.getElementById('s-desc').value : ""
+                description: document.getElementById('s-desc') ? document.getElementById('s-desc').value : "Нет"
             };
             tg.showConfirm(`Отправить запрос?`, (ok) => {
-                if (ok) { tg.sendData(JSON.stringify(data)); tg.close(); }
+                if (ok) { 
+                    tg.showAlert("✅ Запрос отправлен! Обязательно напишите /start в боте, чтобы обновить профиль.", () => {
+                        tg.sendData(JSON.stringify(data)); 
+                    });
+                }
             });
         }
 
         function cancelMyOrder() {
             tg.showConfirm("Точно отменить текущий заказ?", (ok) => {
-                if(ok) { tg.sendData(JSON.stringify({action: "cancel_order"})); tg.close(); }
+                if(ok) { 
+                    tg.showAlert("✅ Заказ отменен. Напишите /start в боте для обновления.", () => {
+                        tg.sendData(JSON.stringify({action: "cancel_order"})); 
+                    });
+                }
             });
         }
 
         function refundMyOrder() {
-            tg.showConfirm("Сделать возврат? За отмену работы бустера взимается штраф 20% от цены.", (ok) => {
-                if(ok) { tg.sendData(JSON.stringify({action: "refund_order"})); tg.close(); }
+            tg.showConfirm("Сделать возврат? Штраф 20% от цены.", (ok) => {
+                if(ok) { 
+                    tg.showAlert("✅ Возврат оформлен. Напишите /start в боте для обновления баланса.", () => {
+                        tg.sendData(JSON.stringify({action: "refund_order"})); 
+                    });
+                }
             });
         }
 
         function takeOrder(oid) {
             tg.showConfirm(`Взять заказ #${oid} в работу?`, (ok) => {
-                if(ok) { tg.sendData(JSON.stringify({ action: "booster_take", order_id: oid })); tg.close(); }
+                if(ok) { 
+                    tg.showAlert("⚡ Заказ взят в работу! Напишите /start в боте для обновления панели.", () => {
+                        tg.sendData(JSON.stringify({ action: "booster_take", order_id: oid })); 
+                    });
+                }
             });
         }
 
-        // НОВАЯ ФУНКЦИЯ ДЛЯ БУСТЕРА (Отмена выполнения)
         function cancelBoosterOrder(oid) {
-            tg.showConfirm(`Точно отказаться от заказа #${oid}? Он вернется в биржу для других.`, (ok) => {
-                if(ok) { tg.sendData(JSON.stringify({ action: "booster_cancel", order_id: oid })); tg.close(); }
+            tg.showConfirm(`Точно отказаться от заказа #${oid}? Он вернется в биржу.`, (ok) => {
+                if(ok) { 
+                    tg.showAlert("⚠️ Вы отказались от заказа. Напишите /start в боте для обновления.", () => {
+                        tg.sendData(JSON.stringify({ action: "booster_cancel", order_id: oid })); 
+                    });
+                }
             });
         }
 
