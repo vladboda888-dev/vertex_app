@@ -61,6 +61,21 @@
         .page { display: none; padding: 20px 20px 100px; animation: fadeIn 0.4s ease-out forwards; }
         .page.active { display: block; }
 
+        /* Кастомизация и Чат */
+        .chat-msg { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-bottom: 8px; font-size: 11px; word-break: break-word; }
+        .chat-name { font-weight: 900; margin-bottom: 3px; }
+        .frame-gold { box-shadow: 0 0 10px var(--gold), inset 0 0 5px var(--gold); border: 2px solid var(--gold); }
+        .frame-neon { box-shadow: 0 0 10px #00aaff, inset 0 0 5px #00aaff; border: 2px solid #00aaff; }
+        .frame-blood { box-shadow: 0 0 10px #ff3333, inset 0 0 5px #ff3333; border: 2px solid #ff3333; }
+        
+        /* Новости */
+        .news-card { background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); overflow: hidden; margin-bottom: 15px; }
+        .news-header { display: flex; align-items: center; padding: 12px; gap: 10px; background: rgba(255,255,255,0.02); }
+        .news-ava { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; }
+        .news-title { font-size: 13px; font-weight: 800; color: #fff; }
+        .news-banner { width: 100%; max-height: 150px; object-fit: cover; }
+        .news-text { padding: 12px; font-size: 11px; color: #ccc; line-height: 1.4; }
+        
         /* Шапка */
         header {
             padding: 25px 20px 15px; text-align: center;
@@ -365,7 +380,10 @@
         </div>
         <div class="grid-2" style="margin-top: 10px;">
             <button class="btn btn-dark" onclick="admCmd('ban')">🚫 Бан/Разбан</button>
-            <button class="btn btn-danger" onclick="admCmd('clear_db')">🧹 Очистка БД</button>
+            <button class="btn btn-danger" onclick="admCmd('del_order')">🗑 Удал. заказ</button>
+        </div>
+        <div class="grid-2" style="margin-top: 10px;">
+            <button class="btn btn-danger" onclick="admCmd('clear_db')" style="grid-column: span 2;">🧹 Очистка старых заказов из БД</button>
         </div>
     </div>
 
@@ -490,11 +508,54 @@
         </div>
     </div>
 
+    <div id="p-news" class="page">
+        <div class="section-title">Лента новостей</div>
+        <div id="news-container">
+            </div>
+    </div>
+
+    <div id="p-chat" class="page">
+        <div class="booster-tabs">
+            <div class="b-tab active" onclick="switchChatTab('chat')">Общий чат</div>
+            <div class="b-tab" onclick="switchChatTab('shop')">Стиль (За XP)</div>
+        </div>
+
+        <div id="tab-chat">
+            <div style="display: flex; gap: 5px; margin-bottom: 15px;">
+                <input type="text" id="chat-input" placeholder="Написать сообщение..." style="margin:0;">
+                <button class="btn" style="width: auto; padding: 0 15px;" onclick="sendChatMessage()">➤</button>
+            </div>
+            <div id="chat-container">
+                </div>
+        </div>
+
+        <div id="tab-shop" style="display: none;">
+            <div class="section-title">Цвет ника</div>
+            <div class="grid-2">
+                <button class="btn btn-dark" style="color: var(--gold);" onclick="buyCustom('color', '#ffc800', 500)">Золотой (500 XP)</button>
+                <button class="btn btn-dark" style="color: #00aaff;" onclick="buyCustom('color', '#00aaff', 500)">Неоновый (500 XP)</button>
+            </div>
+            <div class="section-title">Рамка аватара/профиля</div>
+            <div class="grid-2">
+                <div class="card frame-gold" style="text-align:center; padding:10px;" onclick="buyCustom('frame', 'frame-gold', 1000)">Gold (1000 XP)</div>
+                <div class="card frame-blood" style="text-align:center; padding:10px;" onclick="buyCustom('frame', 'frame-blood', 1000)">Blood (1000 XP)</div>
+            </div>
+        </div>
+    </div>
+    
     <nav>
         <div class="nav-item active" onclick="showTab('shop', this)"><i>🛒</i><span>Магазин</span></div>
         <div class="nav-item" onclick="showTab('profile', this)"><i>👤</i><span>Профиль</span></div>
         <div class="nav-item" onclick="showTab('game', this)"><i>🎯</i><span>Мини-игра</span></div>
         <div class="nav-item" onclick="showTab('top', this)"><i>🏆</i><span>Топ</span></div>
+        <div class="nav-item" onclick="showTab('news', this)">
+            <div style="font-size: 20px; margin-bottom: 4px;">📰</div>
+            Новости
+        </div>
+        <div class="nav-item" onclick="showTab('chat', this)">
+            <div style="font-size: 20px; margin-bottom: 4px;">💬</div>
+            Общение
+        </div>
         <div id="nav-booster" class="nav-item" style="display:none; color: #00aaff;" onclick="showTab('booster', this)"><i>⚡</i><span>Бустер</span></div>
         <div id="nav-admin" class="nav-item" style="display:none;" onclick="showTab('admin', this)"><i>👑</i><span>Админ</span></div>
     </nav>
@@ -613,7 +674,75 @@
                     }
                 });
             }
+            // Парсинг ТОПА с кастомизацией
+            const topData = params.get('top');
+            const leaderList = document.getElementById('leader-list');
+            if(topData && leaderList) {
+                leaderList.innerHTML = "";
+                const players = topData.split('|');
+                players.forEach((p, index) => {
+                    if(!p) return;
+                    const [name, xp, color, frame] = p.split(':');
+                    const shortName = name.length > 7 ? name.substring(0, 7) + ".." : name;
+                    
+                    const frameClass = frame !== 'none' ? frame : '';
+                    const podiumHTML = `<div style="display:flex; flex-direction:column; align-items:center;" class="${frameClass}"><div style="font-size:10px; color:${color}; margin-bottom:2px; font-weight:900; text-shadow: 0 0 5px ${color};">${shortName}</div><div style="font-size:20px; line-height:1;">${index + 1}</div><div style="font-size:8px; margin-top:4px; color:var(--gold);">${xp} XP</div></div>`;
+                    
+                    if (index === 0) {
+                        const r1 = document.querySelector('.rank-1 .podium-bar');
+                        if(r1) r1.innerHTML = podiumHTML;
+                    } else if (index === 1) {
+                        const r2 = document.querySelector('.rank-2 .podium-bar');
+                        if(r2) r2.innerHTML = podiumHTML;
+                    } else if (index === 2) {
+                        const r3 = document.querySelector('.rank-3 .podium-bar');
+                        if(r3) r3.innerHTML = podiumHTML;
+                    } else {
+                        leaderList.innerHTML += `<div class="leader-item ${frameClass}"><div class="leader-rank">#${index + 1}</div><div class="leader-name" style="color:${color}; font-weight:900;">${name}</div><div class="leader-xp">${xp} XP</div></div>`;
+                    }
+                });
+            }
 
+            // Парсинг Новостей
+            const newsData = params.get('news');
+            const newsBox = document.getElementById('news-container');
+            if(newsData && newsBox) {
+                newsBox.innerHTML = "";
+                const newsItems = newsData.split('|');
+                newsItems.forEach(n => {
+                    if(!n) return;
+                    const [ava, banner, title, text, link] = n.split('*');
+                    let bannerHTML = banner !== 'none' ? `<img src="${banner}" class="news-banner">` : '';
+                    newsBox.innerHTML += `
+                        <div class="news-card">
+                            <div class="news-header">
+                                <img src="${ava}" class="news-ava">
+                                <div class="news-title">${title}</div>
+                            </div>
+                            ${bannerHTML}
+                            <div class="news-text">${text}</div>
+                            <div style="padding: 0 12px 12px;"><a href="${link}" class="btn" style="text-decoration:none; display:block; text-align:center;">Перейти</a></div>
+                        </div>`;
+                });
+            }
+
+            // Парсинг Чата
+            const chatData = params.get('chat');
+            const chatBox = document.getElementById('chat-container');
+            if(chatData && chatBox) {
+                chatBox.innerHTML = "";
+                const msgs = chatData.split('|');
+                msgs.forEach(m => {
+                    if(!m) return;
+                    const [name, text, color] = m.split('*');
+                    chatBox.innerHTML += `
+                        <div class="chat-msg">
+                            <div class="chat-name" style="color:${color};">${name}</div>
+                            <div>${text}</div>
+                        </div>`;
+                });
+            }
+     
             // ПАРСИНГ РАСШИРЕННЫХ ЗАКАЗОВ БУСТЕРА
             const ordersData = params.get('orders');
             const ordersBox = document.getElementById('booster-orders');
@@ -1012,6 +1141,34 @@
             });
         }
 
+        function switchChatTab(tab) {
+            document.getElementById('tab-chat').style.display = tab === 'chat' ? 'block' : 'none';
+            document.getElementById('tab-shop').style.display = tab === 'shop' ? 'block' : 'none';
+            document.querySelectorAll('#p-chat .b-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function sendChatMessage() {
+            const msg = document.getElementById('chat-input').value;
+            if(msg.length < 2) return showToast("Сообщение слишком короткое!", "error");
+            tg.showAlert("Сообщение отправлено! Приложение перезапустится.", () => {
+                tg.sendData(JSON.stringify({ action: "send_chat", message: msg }));
+                tg.close();
+            });
+        }
+
+        function buyCustom(type, val, cost) {
+            if(userXP < cost) return showToast(`Нужно ${cost} XP!`, "error");
+            tg.showConfirm(`Купить этот стиль за ${cost} XP?`, (ok) => {
+                if(ok) {
+                    tg.showAlert("Стиль применен! Приложение перезапустится.", () => {
+                        tg.sendData(JSON.stringify({ action: "buy_customization", item_type: type, item_val: val, cost: cost }));
+                        tg.close();
+                    });
+                }
+            });
+        }
+        
         function cancelMyOrder() {
             tg.showConfirm("Точно отменить текущий заказ?", (ok) => {
                 if(ok) { 
