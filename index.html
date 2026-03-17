@@ -847,8 +847,37 @@
             tg.showConfirm(`Взять заказ #${oid} в работу?`, (ok) => {
                 if(ok) { tg.sendData(JSON.stringify({ action: "booster_take", order_id: oid })); tg.close(); }
             });
-    
+        }
 
+        // НОВАЯ ФУНКЦИЯ ДЛЯ БУСТЕРА (Отмена выполнения)
+        function cancelBoosterOrder(oid) {
+            tg.showConfirm(`Точно отказаться от заказа #${oid}? Он вернется в биржу для других.`, (ok) => {
+                if(ok) { tg.sendData(JSON.stringify({ action: "booster_cancel", order_id: oid })); tg.close(); }
+            });
+        }
+
+        function exchangeXP(pkg, cost) {
+            if(userXP < cost) return showToast(`Недостаточно XP! Нужно ${cost}`, "error");
+            tg.showConfirm(`Обменять ${cost} XP на Gold?`, (ok) => {
+                if (ok) tg.sendData(JSON.stringify({ action: "exchange_xp", package: pkg }));
+            });
+        }
+
+        function usePromo() {
+            const val = document.getElementById('promo-val').value;
+            if(!val) return showToast("Введите код!", "error");
+            tg.sendData(JSON.stringify({ action: "use_promo", code: val }));
+        }
+
+        function sendAction(act) { tg.sendData(JSON.stringify({ action: act })); }
+        function admCmd(type) { tg.sendData(JSON.stringify({ action: "admin_action", type: type })); }
+        
+        function copyRef() {
+            const link = document.getElementById('ref-link').innerText;
+            const el = document.createElement('textarea'); el.value = link;
+            document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el);
+            showToast("Ссылка скопирована!", "success");
+        }
     </script>
 </body>
 </html>
