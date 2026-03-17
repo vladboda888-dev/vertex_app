@@ -263,6 +263,16 @@
             </div>
         </div>
 
+        <div id="my-active-order" style="display: none;" class="card">
+            <div class="section-title" style="margin-top:0;">Ваш текущий заказ</div>
+            <div style="display:flex; justify-content:space-between; font-weight:800; margin-bottom:8px;">
+                <span>Заказ #<span id="my-o-id"></span></span>
+                <span id="my-o-status" style="color:var(--gold)">Ожидание</span>
+            </div>
+            <button id="btn-cancel-order" class="btn btn-outline" style="padding:10px; font-size:12px; margin-bottom:5px;" onclick="cancelMyOrder()">Отменить заказ</button>
+            <button id="btn-refund-order" class="btn btn-outline" style="padding:10px; font-size:12px; display:none;" onclick="refundMyOrder()">Возврат (штраф 20%)</button>
+        </div>
+        
         <div class="grid-2">
             <button class="btn btn-dark" onclick="sendAction('get_daily')">🎁 Бонус</button>
             <button class="btn btn-dark" onclick="showTab('xpshop')">🏪 Магазин XP</button>
@@ -457,9 +467,9 @@
         const tg = window.Telegram.WebApp;
         let userXP = 0;
         let userId = 0;
-        let canPlay = "false";
+        let canAim = "false";
+        let canPlane = "false";
 
-        // Переменные для мини-игры
         let gameScore = 0;
         let gameTime = 20;
         let gameTimerId = null;
@@ -468,35 +478,27 @@
         tg.expand();
         tg.ready();
 
-        // 1. ИНИЦИАЛИЗАЦИЯ И ПАРСИНГ ПРИ ЗАГРУЗКЕ
         window.addEventListener('load', () => {
             const params = new URLSearchParams(window.location.search);
             
-            // Баланс и XP
             document.getElementById('u-bal').innerText = (params.get('bal') || '0') + " G";
             userXP = parseInt(params.get('xp') || '0');
             document.getElementById('u-xp-text').innerText = userXP + " / 5000 XP";
             
-            // Уровень
             let level = Math.floor(userXP / 1000) + 1;
             const lvlEl = document.getElementById('u-lvl');
             if(lvlEl) lvlEl.innerText = level;
 
-            // Анимация XP
             const progress = Math.min((userXP / 5000) * 100, 100);
             setTimeout(() => {
                 const fillEl = document.getElementById('u-xp-fill');
                 if(fillEl) fillEl.style.width = progress + "%";
             }, 300);
 
-            // Проверка возможности игры (чтобы не играли повторно)
-            canPlay = params.get('play') || "false";
-            if(canPlay === "false") {
-                const intro = document.getElementById('game-intro');
-                if(intro) intro.innerHTML = "<div style='color:var(--danger); font-weight:800; text-align:center; padding:20px;'>🚫 Вы уже тренировались сегодня.<br><span style='font-size:10px; opacity:0.6;'>Награда за аим доступна раз в сутки.</span></div>";
-            }
+            // Раздельная проверка игр
+            canAim = params.get('aim') || "false";
+            canPlane = params.get('plane') || "false";
 
-            // Роль и ID
             const role = params.get('role');
             userId = params.get('id') || '000000';
             
@@ -510,45 +512,72 @@
                 if(badge) { badge.innerText = 'БУСТЕР'; badge.style.color = '#00aaff'; }
             }
 
-            // Реф. ссылка
             const refEl = document.getElementById('ref-link');
             if(refEl) refEl.innerText = `https://t.me/Vertex8_Bot?start=${userId}`;
 
-            // ПАРСИНГ АДМИН СТАТИСТИКИ
-            const sysStats = params.get('stats');
-            if(sysStats && (role === 'admin' || role === 'owner')) {
-                const [uCount, bCount, oCount] = sysStats.split(':');
-                const elU = document.getElementById('adm-users');
-                const elB = document.getElementById('adm-boosters');
-                const elO = document.getElementById('adm-orders');
-                if(elU) elU.innerText = uCount || "0";
-                if(elB) elB.innerText = bCount || "0";
-                if(elO) elO.innerText = oCount || "0";
+            // Парсинг активного заказа пользователя
+            const myOrder = params.get('myorder');
+            if(myOrder && myOrder !== "") {
+                document.getElementById('my-active-order').style.display = 'block';
+                const [oid, ostatus, oprice] = myOrder.split(':');
+                document.getElementById('my-o-id').innerText = oid;
+                const stEl = document.getElementById('my-o-status');
+                const btnCancel = document.getElementById('btn-cancel-order');
+                const btnRefund = document.getElementById('btn-refund-order');
+                
+                if(ostatus === 'pending' || ostatus === 'awaiting_payment') {
+                    stEl.innerText = "Ожидание админа";
+                    btnCancel.style.display = 'block';
+                    btnRefund.style.display = 'none';
+                } else if (ostatus === 'working') {
+                    stEl.innerText = "В работе бустером";
+                    stEl.style.color = '#00aaff';
+                    btnCancel.style.display = 'none';
+                    btnRefund.style.display = 'block';
+                }
             }
 
-            // ПАРСИНГ РАСШИРЕННЫХ ЗАКАЗОВ БУСТЕРА
+            // Парсинг Топа
+            const topData = params.get('top');
+            const leaderList = document.getElementById('leader-list');
+            if(topData && leaderList) {
+                leaderList.innerHTML = "";
+                const players = topData.split('|');
+                players.forEach((p, index) => {
+                    if(!p) return;
+                    const [name, xp] = p.split(':');
+                    const shortName = name.length > 7 ? name.substring(0, 7) + ".." : name;
+                    if (index === 0) {
+                        const r1 = document.querySelector('.rank-1 .podium-bar');
+                        if(r1) r1.innerHTML = `<div style="font-size:9px; margin-bottom:4px; color:#fff;">${shortName}</div>1`;
+                    } else if (index === 1) {
+                        const r2 = document.querySelector('.rank-2 .podium-bar');
+                        if(r2) r2.innerHTML = `<div style="font-size:9px; margin-bottom:4px; color:#fff;">${shortName}</div>2`;
+                    } else if (index === 2) {
+                        const r3 = document.querySelector('.rank-3 .podium-bar');
+                        if(r3) r3.innerHTML = `<div style="font-size:9px; margin-bottom:4px; color:#fff;">${shortName}</div>3`;
+                    } else {
+                        leaderList.innerHTML += `<div class="leader-item"><div class="leader-rank">#${index + 1}</div><div class="leader-name">${name}</div><div class="leader-xp">${xp} XP</div></div>`;
+                    }
+                });
+            }
+
+            // Парсинг панели Бустера
             const ordersData = params.get('orders');
             const ordersBox = document.getElementById('booster-orders');
             if(ordersData && role !== 'client' && ordersBox) {
                 ordersBox.innerHTML = "";
                 const orders = ordersData.split('|');
-                
                 const elBOrders = document.getElementById('b-stat-orders');
                 if(elBOrders) elBOrders.innerText = orders[0] === "" ? "0" : orders.length;
 
                 orders.forEach(o => {
                     if(!o) return;
-                    // Ожидаемый формат: id:service:price:standoff_id:client_username
                     const [oid, svc, price, stId, clientName] = o.split(':');
                     ordersBox.innerHTML += `
                         <div class="order-card">
-                            <div class="order-header">
-                                <span class="order-id">#${oid}</span>
-                                <span class="order-price">${price}</span>
-                            </div>
-                            <div class="order-tags">
-                                <span class="o-tag tag-svc">ОЖИДАЕТ БУСТЕРА</span>
-                            </div>
+                            <div class="order-header"><span class="order-id">#${oid}</span><span class="order-price">${price}</span></div>
+                            <div class="order-tags"><span class="o-tag tag-svc">ОЖИДАЕТ БУСТЕРА</span></div>
                             <div style="margin-bottom: 12px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px;">
                                 <div class="order-detail"><i>👤</i> Клиент: @${clientName || "Скрыт"}</div>
                                 <div class="order-detail"><i>🎯</i> ID: ${stId || "Не указан"}</div>
@@ -560,92 +589,29 @@
             } else if (role !== 'client' && ordersBox) {
                 ordersBox.innerHTML = "<div style='text-align:center; color:#777; padding:20px;'>Нет доступных заказов</div>";
             }
-            
-            // ПАРСИНГ ТАБЛИЦЫ ЛИДЕРОВ (С ПОДИУМОМ)
-            const topData = params.get('top');
-            const leaderList = document.getElementById('leader-list');
-            if(topData && leaderList) {
-                leaderList.innerHTML = "";
-                const players = topData.split('|');
-                players.forEach((p, index) => {
-                    const [name, xp] = p.split(':');
-                    const shortName = name.length > 7 ? name.substring(0, 7) + ".." : name;
+        });
 
-                    if (index === 0) {
-                        const r1 = document.querySelector('.rank-1 .podium-bar');
-                        if(r1) r1.innerHTML = `<div style="font-size:9px; margin-bottom:4px; color:#fff;">${shortName}</div>1`;
-                    } else if (index === 1) {
-                        const r2 = document.querySelector('.rank-2 .podium-bar');
-                        if(r2) r2.innerHTML = `<div style="font-size:9px; margin-bottom:4px; color:#fff;">${shortName}</div>2`;
-                    } else if (index === 2) {
-                        const r3 = document.querySelector('.rank-3 .podium-bar');
-                        if(r3) r3.innerHTML = `<div style="font-size:9px; margin-bottom:4px; color:#fff;">${shortName}</div>3`;
-                    } else {
-                        leaderList.innerHTML += `
-                            <div class="leader-item">
-                                <div class="leader-rank">#${index + 1}</div>
-                                <div class="leader-name">${name}</div>
-                                <div class="leader-xp">${xp} XP</div>
-                            </div>`;
-                    }
-                });
-            }
-
-            // ПАРСИНГ ЗАКАЗОВ БУСТЕРА (КРАСИВЫЙ ДИЗАЙН)
-            const ordersData = params.get('orders');
-            const ordersBox = document.getElementById('booster-orders');
-            if(ordersData && role !== 'client' && ordersBox) {
-                ordersBox.innerHTML = "";
-                const orders = ordersData.split('|');
-                orders.forEach(o => {
-                    if(!o) return;
-                    const [oid, svc, price] = o.split(':');
-                    ordersBox.innerHTML += `
-                        <div class="order-card">
-                            <div class="order-header">
-                                <span class="order-id">#${oid}</span>
-                                <span class="order-price">${price}</span>
-                            </div>
-                            <div class="order-tags">
-                                <span class="o-tag tag-svc">${svc}</span>
-                                <span class="o-tag tag-mode">ОЖИДАЕТ</span>
-                            </div>
-                            <button class="btn" style="background: linear-gradient(45deg, #0055ff, #00aaff); border-radius: 10px; padding: 12px; font-size: 12px;" onclick="takeOrder(${oid})">ВЗЯТЬ В РАБОТУ</button>
-                        </div>`;
-                });
-            }
-        }); // <---- ВАЖНО: Добавь вот эту строчку!
-
-        // 2. ВЫБОР В МАГАЗИНЕ (КАРТОЧКИ)
         function selSvc(el, val) {
             document.querySelectorAll('#service-grid .card').forEach(c => c.classList.remove('selected'));
-            el.classList.add('selected');
-            document.getElementById('s-service').value = val;
+            el.classList.add('selected'); document.getElementById('s-service').value = val;
             tg.HapticFeedback.selectionChanged();
         }
-
         function selMode(el, val) {
             document.querySelectorAll('#mode-grid .card').forEach(c => c.classList.remove('selected'));
-            el.classList.add('selected');
-            document.getElementById('s-mode').value = val;
+            el.classList.add('selected'); document.getElementById('s-mode').value = val;
             tg.HapticFeedback.selectionChanged();
         }
-
         function selMeth(el, val) {
             document.querySelectorAll('#method-grid .card').forEach(c => c.classList.remove('selected'));
-            el.classList.add('selected');
-            document.getElementById('s-method').value = val;
+            el.classList.add('selected'); document.getElementById('s-method').value = val;
             tg.HapticFeedback.selectionChanged();
         }
 
-        // 3. СИСТЕМА НАВИГАЦИИ
         function showTab(id, el) {
             if(isGameActive) return showToast('Сначала завершите игру!', 'error');
-
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             const targetPage = document.getElementById('p-' + id);
             if(targetPage) targetPage.classList.add('active');
-            
             if(el) {
                 document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
                 el.classList.add('active');
@@ -653,7 +619,6 @@
             tg.HapticFeedback.impactOccurred('light');
         }
 
-        // 4. УВЕДОМЛЕНИЯ
         function showToast(msg, type = 'success') {
             const container = document.getElementById('toast-container');
             if(!container) return;
@@ -661,23 +626,17 @@
             toast.className = `toast ${type}`;
             toast.innerHTML = type === 'success' ? `✅ ${msg}` : type === 'gold' ? `💰 ${msg}` : `❌ ${msg}`;
             container.appendChild(toast);
-            
             tg.HapticFeedback.notificationOccurred(type === 'error' ? 'error' : 'success');
-
-            setTimeout(() => {
-                toast.style.animation = 'slideInRight 0.3s forwards reverse';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
+            setTimeout(() => { toast.style.animation = 'slideInRight 0.3s forwards reverse'; setTimeout(() => toast.remove(), 300); }, 3000);
         }
 
         // --- ЛОГИКА АИМ ТРЕНИРОВКИ ---
         function startAimGame() {
-            if(canPlay === "false") return showToast("Вы уже играли сегодня!", "error");
+            if(canAim === "false") return showToast("Доступно 1 раз в день!", "error");
             document.getElementById('game-menu').style.display = 'none';
             document.getElementById('aim-ui').style.display = 'block';
             gameScore = 0; gameTime = 20; isGameActive = true;
             document.getElementById('aim-score').innerText = gameScore;
-            
             spawnAim();
             gameTimerId = setInterval(() => {
                 gameTime--; document.getElementById('aim-time').innerText = gameTime;
@@ -689,86 +648,70 @@
             const arena = document.getElementById('arena');
             const target = document.getElementById('target');
             target.classList.remove('show');
-            
             setTimeout(() => {
-                const maxX = arena.clientWidth - 50;
-                const maxY = arena.clientHeight - 50;
+                const maxX = arena.clientWidth - 50; const maxY = arena.clientHeight - 50;
                 target.style.left = Math.floor(Math.random() * maxX) + 'px';
                 target.style.top = Math.floor(Math.random() * maxY) + 'px';
                 target.classList.add('show');
-            }, 50); // Миллисекунды для срабатывания анимации
+            }, 50);
         }
 
         function hitAim(event) {
             event.stopPropagation();
             if(!isGameActive) return;
             gameScore++; document.getElementById('aim-score').innerText = gameScore;
-            tg.HapticFeedback.impactOccurred('medium');
-            spawnAim();
+            tg.HapticFeedback.impactOccurred('medium'); spawnAim();
         }
 
-        function missAim() {
-            if(isGameActive) tg.HapticFeedback.impactOccurred('rigid');
-        }
+        function missAim() { if(isGameActive) tg.HapticFeedback.impactOccurred('rigid'); }
 
         function endAimGame() {
             clearInterval(gameTimerId); isGameActive = false;
             document.getElementById('target').classList.remove('show');
             document.getElementById('aim-ui').style.display = 'none';
             document.getElementById('game-menu').style.display = 'block';
-            canPlay = "false";
+            canAim = "false";
             
             if(gameScore >= 15) {
                 showToast(`Победа! Вы набрали ${gameScore} очков.`, 'success');
                 tg.sendData(JSON.stringify({ action: "minigame_win", game: "aim" }));
             } else {
                 showToast(`Поражение. Счёт: ${gameScore}.`, 'error');
-                tg.sendData(JSON.stringify({ action: "minigame_lose" }));
+                tg.sendData(JSON.stringify({ action: "minigame_lose", game: "aim" }));
             }
         }
 
-        // --- ЛОГИКА САМОЛЕТА (ВЫЖИВАНИЕ) ---
+        // --- ЛОГИКА САМОЛЕТА ---
         let planeInterval, bulletInterval;
-        let pX = 50, pY = 80; // Проценты
+        let pX = 50, pY = 80;
 
         function startPlaneGame() {
-            if(canPlay === "false") return showToast("Вы уже играли сегодня!", "error");
+            if(canPlane === "false") return showToast("Доступно 1 раз в день!", "error");
             document.getElementById('game-menu').style.display = 'none';
             document.getElementById('plane-ui').style.display = 'block';
-            
             gameTime = 60; isGameActive = true;
             document.getElementById('plane-time').innerText = gameTime;
             
             const arena = document.getElementById('plane-arena');
             const plane = document.getElementById('plane');
             
-            // Управление пальцем
             arena.addEventListener('touchmove', (e) => {
                 if(!isGameActive) return;
                 e.preventDefault();
                 const rect = arena.getBoundingClientRect();
-                const touch = e.touches[0];
-                let x = touch.clientX - rect.left;
-                let y = touch.clientY - rect.top;
-                
-                // Ограничения
+                let x = e.touches[0].clientX - rect.left;
+                let y = e.touches[0].clientY - rect.top;
                 if(x < 15) x = 15; if(x > rect.width - 15) x = rect.width - 15;
                 if(y < 15) y = 15; if(y > rect.height - 15) y = rect.height - 15;
-                
-                plane.style.left = x + 'px';
-                plane.style.top = y + 'px';
+                plane.style.left = x + 'px'; plane.style.top = y + 'px';
             }, {passive: false});
 
-            // Таймер
             gameTimerId = setInterval(() => {
                 gameTime--; document.getElementById('plane-time').innerText = gameTime;
                 if(gameTime <= 0) endPlaneGame(true);
             }, 1000);
 
-            // Спавн пуль
-            bulletInterval = setInterval(spawnBullet, 300); // Высокая сложность
-            
-            // Проверка столкновений
+            bulletInterval = setInterval(spawnBullet, 300);
             planeInterval = setInterval(checkCollisions, 50);
         }
 
@@ -777,60 +720,43 @@
             const arena = document.getElementById('plane-arena');
             const bullet = document.createElement('div');
             bullet.className = 'bullet';
-            
-            // 70% сверху, 30% сбоку
             if(Math.random() > 0.3) {
-                bullet.style.left = Math.random() * 95 + '%';
-                bullet.style.top = '-20px';
-                arena.appendChild(bullet);
-                animateBullet(bullet, 0, 10); // Падает вниз
+                bullet.style.left = Math.random() * 95 + '%'; bullet.style.top = '-20px';
+                arena.appendChild(bullet); animateBullet(bullet, 0, 10);
             } else {
                 bullet.style.top = Math.random() * 80 + '%';
                 let leftSide = Math.random() > 0.5;
                 bullet.style.left = leftSide ? '-20px' : '105%';
-                bullet.style.width = '15px'; bullet.style.height = '6px'; // Горизонтальная пуля
-                arena.appendChild(bullet);
-                animateBullet(bullet, leftSide ? 10 : -10, 0);
+                bullet.style.width = '15px'; bullet.style.height = '6px';
+                arena.appendChild(bullet); animateBullet(bullet, leftSide ? 10 : -10, 0);
             }
         }
 
         function animateBullet(b, dx, dy) {
             let posX = parseFloat(b.style.left) || (b.style.left.includes('%') ? b.offsetLeft : -20);
             let posY = parseFloat(b.style.top) || -20;
-            
             const anim = setInterval(() => {
                 if(!isGameActive) { clearInterval(anim); b.remove(); return; }
                 if(dx !== 0) { posX += dx; b.style.left = posX + 'px'; }
                 if(dy !== 0) { posY += dy; b.style.top = posY + 'px'; }
-                
-                if(posY > 400 || posX > 500 || posX < -50) {
-                    clearInterval(anim); b.remove();
-                }
+                if(posY > 400 || posX > 500 || posX < -50) { clearInterval(anim); b.remove(); }
             }, 30);
         }
 
         function checkCollisions() {
             const plane = document.getElementById('plane').getBoundingClientRect();
-            const bullets = document.querySelectorAll('.bullet');
-            
-            bullets.forEach(b => {
+            document.querySelectorAll('.bullet').forEach(b => {
                 const br = b.getBoundingClientRect();
-                // Уменьшенный хитбокс самолета (чтобы было честно)
-                if (br.left < plane.right - 5 && br.right > plane.left + 5 &&
-                    br.top < plane.bottom - 5 && br.bottom > plane.top + 5) {
-                    endPlaneGame(false);
-                }
+                if (br.left < plane.right - 5 && br.right > plane.left + 5 && br.top < plane.bottom - 5 && br.bottom > plane.top + 5) endPlaneGame(false);
             });
         }
 
         function endPlaneGame(win) {
-            isGameActive = false;
-            clearInterval(gameTimerId); clearInterval(bulletInterval); clearInterval(planeInterval);
+            isGameActive = false; clearInterval(gameTimerId); clearInterval(bulletInterval); clearInterval(planeInterval);
             document.querySelectorAll('.bullet').forEach(b => b.remove());
-            
             document.getElementById('plane-ui').style.display = 'none';
             document.getElementById('game-menu').style.display = 'block';
-            canPlay = "false";
+            canPlane = "false";
 
             if(win) {
                 showToast("Выживание пройдено! Вы профи.", "success");
@@ -838,78 +764,68 @@
             } else {
                 tg.HapticFeedback.notificationOccurred('error');
                 showToast(`Самолет сбит! Вы продержались ${60 - gameTime} сек.`, "error");
-                tg.sendData(JSON.stringify({ action: "minigame_lose" }));
+                tg.sendData(JSON.stringify({ action: "minigame_lose", game: "plane" }));
             }
-                    }
+        }
 
-        // 6. ОТПРАВКА ЗАКАЗА И БУСТЕР
+        // --- УПРАВЛЕНИЕ ЗАКАЗАМИ ---
         function sendOrder() {
+            const stIdVal = document.getElementById('s-id').value;
+            if(!stIdVal || stIdVal.length < 5) return showToast("Введите корректный ID Standoff 2!", "error");
+            
             const data = {
                 action: "create_order_request",
                 service_id: document.getElementById('s-service') ? document.getElementById('s-service').value : "S1",
                 mode: document.getElementById('s-mode') ? document.getElementById('s-mode').value : "M1",
                 method: document.getElementById('s-method') ? document.getElementById('s-method').value : "account",
-                standoff_id: document.getElementById('s-id').value,
-                region: "Не указан",
+                standoff_id: stIdVal,
                 description: document.getElementById('s-desc') ? document.getElementById('s-desc').value : ""
             };
-            
-            if(!data.standoff_id || data.standoff_id.length < 5) {
-                return showToast("Введите корректный ID Standoff 2!", "error");
-            }
+            tg.showConfirm(`Отправить запрос? Убедись, что у тебя нет активных заказов.`, (ok) => {
+                if (ok) { tg.sendData(JSON.stringify(data)); tg.close(); }
+            });
+        }
 
-            tg.showConfirm(`Отправить запрос? Админ пришлет скин для оплаты.`, (ok) => {
-                if (ok) {
-                    tg.sendData(JSON.stringify(data));
-                    tg.close();
-                }
+        function cancelMyOrder() {
+            tg.showConfirm("Точно отменить текущий заказ?", (ok) => {
+                if(ok) { tg.sendData(JSON.stringify({action: "cancel_order"})); tg.close(); }
+            });
+        }
+
+        function refundMyOrder() {
+            tg.showConfirm("Сделать возврат? За отмену работы бустера взимается штраф 20% от цены.", (ok) => {
+                if(ok) { tg.sendData(JSON.stringify({action: "refund_order"})); tg.close(); }
             });
         }
 
         function takeOrder(oid) {
             tg.showConfirm(`Взять заказ #${oid} в работу?`, (ok) => {
-                if(ok) {
-                    tg.sendData(JSON.stringify({ action: "booster_take", order_id: oid }));
-                    tg.close();
-                }
+                if(ok) { tg.sendData(JSON.stringify({ action: "booster_take", order_id: oid })); tg.close(); }
             });
         }
 
-        // 7. ОБМЕН XP И ПРОМОКОДЫ
+        // --- УТИЛИТЫ ---
         function exchangeXP(pkg, cost) {
-            if(userXP < cost) {
-                return showToast(`Недостаточно XP! Нужно ${cost}, у вас ${userXP}`, "error");
-            }
+            if(userXP < cost) return showToast(`Недостаточно XP! Нужно ${cost}`, "error");
             tg.showConfirm(`Обменять ${cost} XP на Gold?`, (ok) => {
                 if (ok) tg.sendData(JSON.stringify({ action: "exchange_xp", package: pkg }));
             });
         }
-
         function usePromo() {
             const val = document.getElementById('promo-val').value;
             if(!val) return showToast("Введите код!", "error");
             tg.sendData(JSON.stringify({ action: "use_promo", code: val }));
         }
-
-        // 8. АДМИНКА И УТИЛИТЫ
-        function sendAction(act) {
-            tg.sendData(JSON.stringify({ action: act }));
-        }
-
-        function admCmd(type) {
-            tg.sendData(JSON.stringify({ action: "admin_action", type: type }));
-        }
-
+        function sendAction(act) { tg.sendData(JSON.stringify({ action: act })); }
+        function admCmd(type) { tg.sendData(JSON.stringify({ action: "admin_action", type: type })); }
         function copyRef() {
             const link = document.getElementById('ref-link').innerText;
-            const el = document.createElement('textarea');
-            el.value = link;
-            document.body.appendChild(el);
-            el.select();
-            document.execCommand('copy');
-            document.body.removeChild(el);
+            const el = document.createElement('textarea'); el.value = link;
+            document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el);
             showToast("Ссылка скопирована!", "success");
         }
+    </script>
+
     </script>
 </body>
 </html>
