@@ -140,6 +140,30 @@
         .toast { background: var(--bg-surface-light); border-left: 4px solid var(--accent); color: #fff; padding: 16px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; box-shadow: 0 5px 15px rgba(0,0,0,0.5); animation: slideInRight 0.3s forwards; display: flex; align-items: center; gap: 10px; }
         .toast.success { border-color: var(--success); }
         .toast.gold { border-color: var(--gold); }
+
+        /* Панель Бустера */
+        .booster-tabs { display: flex; gap: 10px; margin-bottom: 15px; }
+        .b-tab { flex: 1; padding: 12px; text-align: center; background: var(--bg-surface-light); border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-secondary); cursor: pointer; transition: 0.3s; }
+        .b-tab.active { background: rgba(0, 170, 255, 0.1); border-color: #00aaff; color: #00aaff; box-shadow: 0 0 10px rgba(0, 170, 255, 0.2); }
+        .order-card { background: var(--bg-surface); border: 1px solid var(--border-color); border-left: 4px solid #00aaff; border-radius: var(--radius-md); padding: 15px; margin-bottom: 12px; }
+        .order-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .order-id { font-size: 14px; font-weight: 900; font-family: 'Orbitron'; color: #fff; }
+        .order-price { font-size: 13px; font-weight: 800; color: var(--gold); background: rgba(255, 204, 0, 0.1); padding: 4px 8px; border-radius: 6px; }
+        .order-tags { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+        .o-tag { font-size: 10px; padding: 5px 8px; border-radius: 4px; font-weight: 700; text-transform: uppercase; }
+        .tag-svc { background: rgba(230, 0, 0, 0.1); color: var(--accent); border: 1px solid rgba(230, 0, 0, 0.2); }
+        .tag-mode { background: rgba(255, 255, 255, 0.05); color: #ccc; border: 1px solid rgba(255, 255, 255, 0.1); }
+
+        /* Игры */
+        .game-menu-card { background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 20px; margin-bottom: 15px; text-align: center; cursor: pointer; transition: 0.2s; }
+        .game-menu-card:active { transform: scale(0.97); }
+        .plane-arena { width: 100%; height: 320px; background: #07070a; border: 2px solid #00aaff; border-radius: var(--radius-md); position: relative; overflow: hidden; touch-action: none; box-shadow: inset 0 0 20px rgba(0, 170, 255, 0.1); }
+        #plane { position: absolute; width: 30px; height: 30px; font-size: 24px; display: flex; justify-content: center; align-items: center; left: 50%; top: 80%; transform: translate(-50%, -50%); z-index: 10; text-shadow: 0 0 10px #00aaff; }
+        .bullet { position: absolute; width: 6px; height: 18px; background: #ff0000; border-radius: 10px; box-shadow: 0 0 10px #ff0000; }
+        
+        /* Исправление шариков аима */
+        .target { position: absolute; width: 45px; height: 45px; background: radial-gradient(circle, #fff 20%, var(--accent) 30%, var(--accent) 100%); border-radius: 50%; box-shadow: 0 0 15px var(--accent-glow); cursor: crosshair; transform: scale(0); transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .target.show { transform: scale(1); }
     </style>
 </head>
 <body>
@@ -246,23 +270,47 @@
     </div>
 
     <div id="p-game" class="page">
-        <div class="section-title">Тренировка Аима</div>
-        <div class="card" id="game-intro">
-            <div style="font-size: 13px; line-height: 1.5; margin-bottom: 15px; color: var(--text-secondary);">
-                Нажимай на появляющиеся мишени как можно быстрее. Набери 15 очков за 20 секунд, чтобы получить <span style="color: var(--success); font-weight: 800;">+25 XP</span> (Доступно 1 раз в день).
+        <div class="section-title">Игровой центр</div>
+        
+        <div id="game-menu">
+            <div class="game-menu-card" onclick="startAimGame()">
+                <div style="font-size: 16px; font-weight: 800; color: var(--accent); margin-bottom: 5px;">🎯 Тренировка Аима</div>
+                <div style="font-size: 11px; color: var(--text-secondary);">Набери 15 очков за 20 секунд.<br><span style="color:var(--success); font-weight:800;">Награда: 25 XP</span></div>
             </div>
-            <button class="btn" onclick="startGame()">Начать тренировку</button>
+            <div class="game-menu-card" style="border-color: rgba(0, 170, 255, 0.3);" onclick="startPlaneGame()">
+                <div style="font-size: 16px; font-weight: 800; color: #00aaff; margin-bottom: 5px;">✈️ Выживание Пилота</div>
+                <div style="font-size: 11px; color: var(--text-secondary);">Уклоняйся от ракет ровно 60 секунд. Хардкор.<br><span style="color:var(--success); font-weight:800;">Награда: 35 XP</span></div>
+            </div>
         </div>
 
-        <div id="game-ui" style="display: none;">
+        <div id="aim-ui" style="display: none;">
             <div class="game-stats">
-                <div>СЧЕТ: <span id="game-score" style="color: #fff;">0</span>/15</div>
-                <div>ВРЕМЯ: <span id="game-time" style="color: #fff;">20</span>с</div>
+                <div>СЧЕТ: <span id="aim-score" style="color: #fff;">0</span>/15</div>
+                <div>ВРЕМЯ: <span id="aim-time" style="color: #fff;">20</span>с</div>
             </div>
-            <div class="minigame-arena" id="arena" onclick="missClick(event)">
-                <div class="target" id="target" onclick="hitTarget(event)"></div>
+            <div class="minigame-arena" id="arena" style="display:block;" onclick="missAim(event)">
+                <div class="target" id="target" onclick="hitAim(event)"></div>
             </div>
         </div>
+
+        <div id="plane-ui" style="display: none;">
+            <div class="game-stats" style="color: #00aaff; border-color: rgba(0, 170, 255, 0.3);">
+                <div>ВЫЖИВАНИЕ</div>
+                <div>ОСТАЛОСЬ: <span id="plane-time" style="color: #fff; font-weight:900;">60</span>с</div>
+            </div>
+            <div class="plane-arena" id="plane-arena">
+                <div id="plane">✈️</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="p-booster" class="page">
+        <div class="section-title" style="color: #00aaff;">Панель Бустера</div>
+        <div class="booster-tabs">
+            <div class="b-tab active">Свободные заказы</div>
+        </div>
+        <div id="booster-orders">
+            </div>
     </div>
 
     <div id="p-xpshop" class="page">
