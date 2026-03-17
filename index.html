@@ -3,443 +3,545 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Vertex Ultimate Web</title>
+    <title>Vertex Ultimate Control</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
     <style>
+        /* Глобальные переменные темы Vertex Blood */
         :root {
-            --bg-main: #050000;
-            --bg-card: #0f0202;
-            --accent: #ff0000;
-            --accent-dark: #8b0000;
-            --text-main: #ffffff;
-            --text-muted: #888888;
-            --gold: #ffcc00;
+            --bg-base: #030303;
+            --bg-surface: #0f0f13;
+            --bg-surface-light: #1a1a20;
+            --accent: #e60000;
+            --accent-hover: #ff1a1a;
+            --accent-glow: rgba(230, 0, 0, 0.4);
+            --text-primary: #ffffff;
+            --text-secondary: #8a8a93;
+            --gold: #ffc800;
+            --gold-glow: rgba(255, 200, 0, 0.3);
             --success: #00ff66;
-            --border: 1px solid #2a0000;
+            --danger: #ff3333;
+            --border-color: #22222a;
+            --radius-sm: 8px;
+            --radius-md: 14px;
+            --radius-lg: 20px;
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        /* Сброс и базовые настройки */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; margin: 0; padding: 0; }
         
         body {
-            background-color: var(--bg-main);
-            /* Комбинированный фон: тактическая сетка + красное свечение сверху */
-            background-image: 
-                radial-gradient(circle at 50% -20%, rgba(255, 0, 0, 0.2) 0%, transparent 40%),
-                linear-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.07) 1px, transparent 1px);
-            background-size: 100% 100%, 40px 40px, 40px 40px; /* Размер клетки сетки */
-            background-attachment: fixed;
-            
-            color: var(--text-main);
+            background-color: var(--bg-base);
+            color: var(--text-primary);
             font-family: 'Inter', sans-serif;
-            margin: 0;
-            padding: 0;
             overflow-x: hidden;
             user-select: none;
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* Дополнительный минималистичный декор (опционально) */
-        body::before {
-            content: "";
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            /* Эффект легкого шума для текстуры */
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3 %3Cfilter id='noiseFilter'%3 %3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3 %3C/filter%3 %3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3 %3C/svg%3");
-            opacity: 0.02;
+        /* Фоновый паттерн - Тактическая сетка */
+        .bg-grid {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1;
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(230, 0, 0, 0.15) 0%, transparent 60%),
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 100% 100%, 30px 30px, 30px 30px;
             pointer-events: none;
-            z-index: 1;
         }
 
         /* Анимации */
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes glowRed { 0% { box-shadow: 0 0 5px var(--accent-dark); } 50% { box-shadow: 0 0 15px var(--accent); } 100% { box-shadow: 0 0 5px var(--accent-dark); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulseGlow { 0% { box-shadow: 0 0 5px var(--accent-glow); } 50% { box-shadow: 0 0 20px var(--accent-glow); } 100% { box-shadow: 0 0 5px var(--accent-glow); } }
+        @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-        .page { display: none; padding: 20px 20px 100px; animation: fadeUp 0.3s ease-out; }
+        /* Система страниц */
+        .page { display: none; padding: 20px 20px 100px; animation: fadeIn 0.4s ease-out forwards; }
         .page.active { display: block; }
 
         /* Шапка */
         header {
-            padding: 25px 20px;
-            text-align: center;
-            background: linear-gradient(180deg, #1a0000 0%, var(--bg-main) 100%);
-            border-bottom: var(--border);
-            position: relative;
+            padding: 25px 20px 15px; text-align: center;
+            background: linear-gradient(180deg, rgba(20, 0, 0, 0.8) 0%, var(--bg-base) 100%);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px);
         }
+        .logo { font-family: 'Orbitron', sans-serif; font-size: 26px; font-weight: 900; color: var(--accent); letter-spacing: 4px; text-transform: uppercase; text-shadow: 0 0 15px var(--accent-glow); }
+        .user-badge { display: inline-block; margin-top: 8px; padding: 4px 10px; background: var(--bg-surface-light); border-radius: 20px; font-size: 10px; color: var(--text-secondary); font-weight: 600; letter-spacing: 1px; }
 
-        .logo {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 32px;
-            font-weight: 900;
-            color: var(--accent);
-            text-shadow: 0 0 15px rgba(255, 0, 0, 0.6);
-            letter-spacing: 5px;
-            margin: 0;
-        }
-
-        .user-tag {
-            font-size: 10px; color: var(--text-muted); margin-top: 5px; font-family: monospace;
-        }
-
-        /* Заголовки разделов */
-        .section-title {
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: var(--accent);
-            margin: 25px 0 12px 5px;
-            font-weight: 800;
-            display: flex;
-            align-items: center;
-        }
-        .section-title::after { content: ''; height: 1px; flex-grow: 1; background: var(--border); margin-left: 10px; }
+        /* Типографика и заголовки */
+        .section-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent); margin: 25px 0 15px; font-weight: 800; display: flex; align-items: center; }
+        .section-title::after { content: ''; height: 1px; flex-grow: 1; background: var(--border-color); margin-left: 12px; }
 
         /* Карточки */
-        .card {
-            background: var(--bg-card);
-            border: var(--border);
-            border-radius: 16px;
-            padding: 18px;
-            margin-bottom: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-            transition: 0.2s;
-        }
-        .card-gold { border-color: var(--gold); background: linear-gradient(135deg, #1a1500, #000); }
-        .card-clickable:active { transform: scale(0.98); background: #1a0000; }
-        .card.selected { border-color: var(--accent); box-shadow: 0 0 10px rgba(255, 0, 0, 0.3); background: #200000; }
+        .card { background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 18px; margin-bottom: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); transition: var(--transition); }
+        .card-gold { border-color: rgba(255, 200, 0, 0.3); background: linear-gradient(145deg, var(--bg-surface), #1a1500); }
+        .card-clickable { cursor: pointer; }
+        .card-clickable:active { transform: scale(0.97); background: var(--bg-surface-light); }
+        .card.selected { border-color: var(--accent); background: rgba(230, 0, 0, 0.05); box-shadow: 0 0 15px var(--accent-glow); }
 
-        /* Инпуты и Селекты */
-        select, input[type="text"], input[type="number"] {
-            width: 100%;
-            background: #050000;
-            border: 1px solid #330000;
-            padding: 15px;
-            border-radius: 12px;
-            color: #fff;
-            font-size: 15px;
-            margin-bottom: 12px;
-            transition: 0.3s;
-            appearance: none;
-        }
-        input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 8px rgba(255, 0, 0, 0.4); }
+        /* Элементы форм */
+        .input-group { margin-bottom: 15px; }
+        .input-label { display: block; font-size: 10px; color: var(--text-secondary); margin-bottom: 6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        select, input { width: 100%; background: var(--bg-surface-light); border: 1px solid var(--border-color); padding: 16px; border-radius: var(--radius-md); color: var(--text-primary); font-size: 14px; font-family: 'Inter', sans-serif; transition: var(--transition); appearance: none; }
+        input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(230, 0, 0, 0.15); }
+        input::placeholder { color: #555; }
 
         /* Кнопки */
-        .btn {
-            width: 100%; background: linear-gradient(45deg, var(--accent-dark), var(--accent));
-            color: #fff; border: none; padding: 16px; border-radius: 12px; font-size: 15px;
-            font-weight: 800; text-transform: uppercase; letter-spacing: 1px; cursor: pointer;
-            box-shadow: 0 5px 15px rgba(255, 0, 0, 0.2); transition: 0.2s; margin-bottom: 10px;
-        }
-        .btn:active { transform: translateY(2px); box-shadow: none; }
-        .btn-outline { background: transparent; border: 1px solid var(--accent); color: var(--accent); box-shadow: none; }
-        .btn-gold { background: linear-gradient(45deg, #b38600, var(--gold)); color: #000; box-shadow: 0 5px 15px rgba(255, 204, 0, 0.2); }
-        .btn-dark { background: #111; border: 1px solid #333; box-shadow: none; }
+        .btn { width: 100%; background: var(--accent); color: #fff; border: none; padding: 16px; border-radius: var(--radius-md); font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; transition: var(--transition); display: flex; justify-content: center; align-items: center; gap: 8px; }
+        .btn:active { transform: translateY(2px) scale(0.98); opacity: 0.9; }
+        .btn-dark { background: var(--bg-surface-light); border: 1px solid var(--border-color); color: var(--text-primary); }
+        .btn-gold { background: linear-gradient(45deg, #cc9900, var(--gold)); color: #000; box-shadow: 0 5px 15px var(--gold-glow); }
+        .btn-outline { background: transparent; border: 1px solid var(--accent); color: var(--accent); }
+        .btn-danger { background: rgba(255, 51, 51, 0.1); border: 1px solid var(--danger); color: var(--danger); }
 
-        /* Списки и Гриды */
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        
-        .list-item {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 12px 0; border-bottom: 1px solid #220000; font-size: 13px;
-        }
-        .list-item:last-child { border-bottom: none; }
+        /* Гриды и списки */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .list-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border-color); }
+        .list-row:last-child { border-bottom: none; padding-bottom: 0; }
 
-        /* XP Бар */
-        .xp-bar-bg { width: 100%; height: 8px; background: #222; border-radius: 4px; overflow: hidden; margin-top: 8px; }
-        .xp-bar-fill { height: 100%; background: var(--accent); width: 0%; transition: width 1s ease; }
+        /* Прогресс бары (XP) */
+        .xp-container { margin-top: 15px; }
+        .xp-header { display: flex; justify-content: space-between; font-size: 11px; font-weight: 600; margin-bottom: 8px; color: var(--text-secondary); }
+        .xp-track { width: 100%; height: 8px; background: var(--bg-base); border-radius: 10px; overflow: hidden; border: 1px solid var(--border-color); }
+        .xp-fill { height: 100%; background: linear-gradient(90deg, #800000, var(--accent)); width: 0%; border-radius: 10px; box-shadow: 0 0 10px var(--accent-glow); transition: width 1.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
 
-        /* Навигация */
-        nav {
-            position: fixed; bottom: 0; width: 100%; background: rgba(5, 0, 0, 0.95);
-            backdrop-filter: blur(10px); display: flex; justify-content: space-around;
-            padding: 10px 0 15px 0; border-top: var(--border); z-index: 9999;
-        }
-        .nav-item {
-            display: flex; flex-direction: column; align-items: center; color: var(--text-muted);
-            font-size: 10px; font-weight: 800; cursor: pointer; transition: 0.3s;
-        }
+        /* Мини-игра (Аим Тренинг) */
+        .minigame-arena { width: 100%; height: 250px; background: var(--bg-base); border: 2px solid var(--border-color); border-radius: var(--radius-md); position: relative; overflow: hidden; margin-top: 15px; display: none; }
+        .target { position: absolute; width: 40px; height: 40px; background: radial-gradient(circle, #fff 20%, var(--accent) 30%, var(--accent) 100%); border-radius: 50%; box-shadow: 0 0 15px var(--accent-glow); cursor: crosshair; transform: scale(0); transition: transform 0.1s; }
+        .target.active { transform: scale(1); }
+        .game-stats { display: flex; justify-content: space-between; font-size: 12px; font-family: 'Orbitron'; color: var(--accent); padding: 10px; background: var(--bg-surface); border-bottom: 1px solid var(--border-color); }
+
+        /* Таблица лидеров (Топ-3 Подиум) */
+        .podium { display: flex; justify-content: center; align-items: flex-end; height: 140px; margin-bottom: 30px; gap: 10px; }
+        .podium-place { display: flex; flex-direction: column; align-items: center; width: 30%; }
+        .podium-avatar { width: 45px; height: 45px; background: var(--bg-surface-light); border-radius: 50%; margin-bottom: 10px; display: flex; justify-content: center; align-items: center; font-size: 20px; border: 2px solid var(--border-color); }
+        .podium-bar { width: 100%; background: var(--bg-surface); border-radius: 8px 8px 0 0; display: flex; justify-content: center; align-items: flex-start; padding-top: 10px; font-weight: 900; font-family: 'Orbitron'; border: 1px solid var(--border-color); border-bottom: none; }
+        .rank-1 .podium-bar { height: 100px; background: linear-gradient(180deg, rgba(255,200,0,0.2) 0%, var(--bg-surface) 100%); border-color: var(--gold); color: var(--gold); }
+        .rank-2 .podium-bar { height: 75px; background: linear-gradient(180deg, rgba(192,192,192,0.2) 0%, var(--bg-surface) 100%); border-color: #c0c0c0; color: #c0c0c0; }
+        .rank-3 .podium-bar { height: 50px; background: linear-gradient(180deg, rgba(205,127,50,0.2) 0%, var(--bg-surface) 100%); border-color: #cd7f32; color: #cd7f32; }
+        .leaderboard-list { display: flex; flex-direction: column; gap: 8px; }
+        .leader-item { display: flex; align-items: center; padding: 12px 15px; background: var(--bg-surface); border-radius: var(--radius-sm); font-size: 13px; }
+        .leader-rank { width: 30px; font-weight: 800; color: var(--text-secondary); }
+        .leader-name { flex-grow: 1; font-weight: 600; }
+        .leader-xp { font-weight: 800; color: var(--accent); font-family: 'Orbitron'; }
+
+        /* Навигация (Bottom Bar) */
+        nav { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(15, 15, 19, 0.95); backdrop-filter: blur(15px); display: flex; justify-content: space-around; padding: 10px 0 20px; border-top: 1px solid var(--border-color); z-index: 1000; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-secondary); font-size: 9px; font-weight: 800; text-transform: uppercase; cursor: pointer; transition: var(--transition); flex: 1; padding: 8px 0; }
+        .nav-item i { font-size: 20px; margin-bottom: 5px; font-style: normal; filter: grayscale(100%); transition: var(--transition); }
         .nav-item.active { color: var(--accent); }
-        .nav-item span { font-size: 22px; margin-bottom: 3px; }
+        .nav-item.active i { filter: grayscale(0%); transform: translateY(-3px) scale(1.1); text-shadow: 0 0 10px var(--accent-glow); }
 
-        /* Модалки и Бейджи */
-        .badge { padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
-        .badge-red { background: var(--accent); color: white; }
-        .badge-green { background: var(--success); color: black; }
-        .badge-gold { background: var(--gold); color: black; }
+        /* Кастомные уведомления (Toasts) */
+        #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; width: 90%; pointer-events: none; }
+        .toast { background: var(--bg-surface-light); border-left: 4px solid var(--accent); color: #fff; padding: 16px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; box-shadow: 0 5px 15px rgba(0,0,0,0.5); animation: slideInRight 0.3s forwards; display: flex; align-items: center; gap: 10px; }
+        .toast.success { border-color: var(--success); }
+        .toast.gold { border-color: var(--gold); }
     </style>
 </head>
 <body>
+    <div class="bg-grid"></div>
+    
+    <div id="toast-container"></div>
+
     <header>
-        <h1 class="logo">VERTEX</h1>
-        <div class="user-tag" id="user-status">ОЖИДАНИЕ СИСТЕМЫ...</div>
+        <div class="logo">VERTEX</div>
+        <div class="user-badge" id="u-role-badge">ИГРОК</div>
     </header>
 
     <div id="p-shop" class="page active">
-        <div class="section-title">Выбор услуги</div>
-        <select id="shop-service" onchange="checkCustomService()">
-            <option value="S1">Silver to Gold - 45G</option>
-            <option value="S2">Gold to Phoenix - 60G</option>
-            <option value="S3">Phoenix to Ranger - 75G</option>
-            <option value="S4">Ranger to Champion - 85G</option>
-            <option value="S5">Champion to Master - 95G</option>
-            <option value="S6">Master to Elite - 120G</option>
-            <option value="S7">Elite to Legend - 190G</option>
-            <option value="SMULTI">Хочу 2+ звания (Свой заказ)</option>
-        </select>
-
-        <div id="custom-desc-block" style="display: none;">
-            <div class="section-title">Опишите ваш заказ</div>
-            <input type="text" id="shop-desc" placeholder="Пример: С Silver 1 до Gold 3, 1300 ммр">
+        <div class="section-title">Конфигурация заказа</div>
+        
+        <div class="input-group">
+            <span class="input-label">Желаемая услуга</span>
+            <select id="s-service">
+                <option value="S1">Silver to Gold - 45G</option>
+                <option value="S2">Gold to Phoenix - 60G</option>
+                <option value="S3">Phoenix to Ranger - 75G</option>
+                <option value="S4">Ranger to Champion - 85G</option>
+                <option value="S5">Champion to Master - 95G</option>
+                <option value="S6">Master to Elite - 120G</option>
+                <option value="S7">Elite to Legend - 190G</option>
+                <option value="SMULTI">Свой заказ (2+ звания)</option>
+            </select>
         </div>
 
-        <div class="section-title">Режим игры</div>
-        <select id="shop-mode">
-            <option value="M1">ММ (5x5)</option>
-            <option value="M2">Напарники</option>
-            <option value="M3">Дуэли</option>
-        </select>
-
-        <div class="section-title">Способ буста</div>
         <div class="grid-2">
-            <div class="card card-clickable selected" id="m-acc" onclick="setBoostMethod('account')">
-                <div style="font-weight: 800; font-size: 14px;">ВХОД В АКК</div>
-                <div style="font-size: 10px; color: var(--success); margin-top: 5px;">Базовая цена</div>
+            <div class="input-group">
+                <span class="input-label">Режим игры</span>
+                <select id="s-mode">
+                    <option value="M1">ММ (5x5)</option>
+                    <option value="M2">Напарники</option>
+                    <option value="M3">Дуэли</option>
+                </select>
             </div>
-            <div class="card card-clickable" id="m-party" onclick="setBoostMethod('party')">
-                <div style="font-weight: 800; font-size: 14px;">В ПАТИ</div>
-                <div style="font-size: 10px; color: var(--gold); margin-top: 5px;">+35% к цене</div>
+            <div class="input-group">
+                <span class="input-label">Метод буста</span>
+                <select id="s-method">
+                    <option value="account">Вход в акк</option>
+                    <option value="party">В лобби (+35%)</option>
+                </select>
             </div>
         </div>
 
         <div class="section-title">Игровые данные</div>
-        <input type="number" id="shop-id" placeholder="Ваш ID в Standoff 2">
-        <input type="text" id="shop-region" placeholder="Ваш регион (например: Россия)">
+        <div class="input-group">
+            <input type="number" id="s-id" placeholder="Ваш ID в Standoff 2">
+        </div>
+        <div class="grid-2">
+            <input type="text" id="s-region" placeholder="Регион (напр. Россия)">
+            <input type="text" id="s-desc" placeholder="Комментарий">
+        </div>
 
-        <button class="btn" onclick="submitOrder()">Заказать буст</button>
+        <button class="btn" onclick="sendOrder()">Оформить заявку</button>
+        <div style="text-align: center; font-size: 10px; color: var(--text-secondary); margin-top: 10px;">
+            Оплата производится через администратора в чате бота
+        </div>
     </div>
 
     <div id="p-profile" class="page">
         <div class="card card-gold">
-            <div style="font-size: 11px; color: var(--gold); font-weight: 800;">МОЙ БАЛАНС</div>
-            <div style="font-size: 32px; font-weight: 900; margin: 5px 0;" id="prof-bal">0 <span style="font-size: 16px;">G</span></div>
-            <div class="list-item" style="border: none; padding: 0; margin-top: 10px;">
-                <span style="font-size: 11px;">Опыт: <b id="prof-xp">0 XP</b></span>
-                <span class="badge badge-gold" id="prof-rank">Новичок</span>
+            <div style="color: var(--gold); font-size: 11px; font-weight: 800; letter-spacing: 1px;">ВАШ БАЛАНС</div>
+            <div style="font-size: 36px; font-weight: 900; font-family: 'Orbitron'; margin: 5px 0;" id="u-bal">0 G</div>
+            
+            <div class="xp-container">
+                <div class="xp-header">
+                    <span>УРОВЕНЬ <b id="u-lvl" style="color: #fff;">1</b></span>
+                    <span id="u-xp-text">0 / 5000 XP</span>
+                </div>
+                <div class="xp-track"><div class="xp-fill" id="u-xp-fill"></div></div>
             </div>
-            <div class="xp-bar-bg"><div class="xp-fill xp-bar-fill" id="prof-xp-bar"></div></div>
         </div>
 
         <div class="grid-2">
-            <button class="btn btn-gold" style="font-size: 12px; padding: 12px;" onclick="nav('xpshop', this)">🏪 Магазин XP</button>
-            <button class="btn btn-outline" style="font-size: 12px; padding: 12px;" onclick="claimDaily()">🎁 Бонус</button>
+            <button class="btn btn-dark" onclick="sendAction('get_daily')">🎁 Бонус</button>
+            <button class="btn btn-dark" onclick="showTab('xpshop')">🏪 Магазин XP</button>
         </div>
 
-        <div class="section-title">Активация промокода</div>
-        <div style="display: flex; gap: 8px;">
-            <input type="text" id="promo-input" placeholder="Введите код..." style="margin: 0;">
-            <button class="btn" style="width: auto; margin: 0; padding: 0 20px;" onclick="activatePromo()">OK</button>
+        <div class="section-title">Промокоды и Бонусы</div>
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <input type="text" id="promo-val" placeholder="Введите код..." style="margin:0;">
+            <button class="btn" style="width: auto; padding: 0 25px;" onclick="usePromo()">OK</button>
         </div>
 
-        <div class="section-title">Реферальная система</div>
         <div class="card">
-            <div style="font-size: 12px; margin-bottom: 10px; color: var(--text-muted);">Приглашай друзей и получай % с их заказов!</div>
-            <div id="ref-link" style="background: #000; padding: 12px; border-radius: 8px; font-size: 11px; color: var(--accent); border: 1px dashed #330000; word-break: break-all;">
-                t.me/VertexBot?start=...
+            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600;">ВАША РЕФЕРАЛЬНАЯ ССЫЛКА</div>
+            <div id="ref-link" style="background: var(--bg-surface-light); padding: 12px; border-radius: 8px; font-size: 11px; color: var(--accent); border: 1px dashed var(--border-color); word-break: break-all; margin-bottom: 10px;">
+                Загрузка...
             </div>
-            <button class="btn btn-dark" style="margin-top: 10px; padding: 12px; font-size: 12px;" onclick="copyRef()">Копировать ссылку</button>
+            <button class="btn btn-dark" style="padding: 12px; font-size: 12px;" onclick="copyRef()">Копировать</button>
         </div>
-        
-        <button class="btn btn-dark" style="margin-top: 10px;" id="btn-booster-panel" style="display: none;" onclick="nav('booster', this)">⚒️ Панель Бустера</button>
+    </div>
+
+    <div id="p-game" class="page">
+        <div class="section-title">Тренировка Аима</div>
+        <div class="card" id="game-intro">
+            <div style="font-size: 13px; line-height: 1.5; margin-bottom: 15px; color: var(--text-secondary);">
+                Нажимай на появляющиеся мишени как можно быстрее. Набери 15 очков за 20 секунд, чтобы получить <span style="color: var(--success); font-weight: 800;">+25 XP</span> (Доступно 1 раз в день).
+            </div>
+            <button class="btn" onclick="startGame()">Начать тренировку</button>
+        </div>
+
+        <div id="game-ui" style="display: none;">
+            <div class="game-stats">
+                <div>СЧЕТ: <span id="game-score" style="color: #fff;">0</span>/15</div>
+                <div>ВРЕМЯ: <span id="game-time" style="color: #fff;">20</span>с</div>
+            </div>
+            <div class="minigame-arena" id="arena" onclick="missClick(event)">
+                <div class="target" id="target" onclick="hitTarget(event)"></div>
+            </div>
+        </div>
     </div>
 
     <div id="p-xpshop" class="page">
         <div class="section-title">Обмен XP на Голду</div>
         <div class="card">
-            <div class="list-item">
-                <span>🥉 150 Gold</span>
-                <button class="btn btn-outline" style="width: auto; padding: 8px 15px; margin: 0;" onclick="buyGold('G1')">1000 XP</button>
+            <div class="list-row">
+                <span style="font-weight: 800;">🥉 150 Gold</span>
+                <button class="btn btn-outline" style="width:auto; padding:8px 15px;" onclick="exchangeXP('G1', 1000)">1000 XP</button>
             </div>
-            <div class="list-item">
-                <span>🥈 300 Gold</span>
-                <button class="btn btn-outline" style="width: auto; padding: 8px 15px; margin: 0;" onclick="buyGold('G2')">2500 XP</button>
+            <div class="list-row">
+                <span style="font-weight: 800;">🥈 300 Gold</span>
+                <button class="btn btn-outline" style="width:auto; padding:8px 15px;" onclick="exchangeXP('G2', 2500)">2500 XP</button>
             </div>
-            <div class="list-item">
-                <span>🥇 650 Gold</span>
-                <button class="btn btn-outline" style="width: auto; padding: 8px 15px; margin: 0;" onclick="buyGold('G3')">5000 XP</button>
+            <div class="list-row">
+                <span style="font-weight: 800;">🥇 650 Gold</span>
+                <button class="btn btn-gold" style="width:auto; padding:8px 15px;" onclick="exchangeXP('G3', 5000)">5000 XP</button>
             </div>
         </div>
+        <button class="btn btn-dark" onclick="showTab('profile')">↩ Вернуться в профиль</button>
     </div>
 
     <div id="p-top" class="page">
-        <div class="section-title">Таблица лидеров Vertex</div>
-        <div class="card" id="top-list">
-            <div style="text-align: center; color: var(--text-muted); font-size: 12px;">Загрузка данных...</div>
-        </div>
-    </div>
-
-    <div id="p-booster" class="page">
-        <div class="section-title">Кабинет Бустера</div>
-        <div class="card card-gold">
-            <div style="font-size: 12px;">Выполнено заказов: <b id="booster-done" style="color: var(--text-main); font-size: 16px;">0</b></div>
-        </div>
-        <div class="section-title">Свободные заказы</div>
-        <div id="free-orders-list">
-            <div class="card" style="text-align: center; font-size: 12px; color: var(--text-muted);">Нет доступных заказов</div>
-        </div>
-    </div>
-
-    <div id="p-support" class="page">
-        <div class="section-title">Связь с администрацией</div>
-        <div class="card">
-            <div style="font-size: 13px; line-height: 1.6; margin-bottom: 15px;">
-                Если у вас возникли проблемы с оплатой, качеством буста или вы нашли баг - пишите нам!
-                <br><br>
-                ⏰ <b>График работы:</b> 10:00 - 22:00 (МСК)
+        <div class="section-title">Топ игроков по XP</div>
+        
+        <div class="podium">
+            <div class="podium-place rank-2">
+                <div class="podium-avatar">🥈</div>
+                <div class="podium-bar">2</div>
             </div>
-            <button class="btn btn-outline" onclick="tg.openTelegramLink('https://t.me/Zentrox_1')">Написать в поддержку</button>
+            <div class="podium-place rank-1">
+                <div class="podium-avatar" style="width: 55px; height: 55px; font-size: 25px;">👑</div>
+                <div class="podium-bar">1</div>
+            </div>
+            <div class="podium-place rank-3">
+                <div class="podium-avatar">🥉</div>
+                <div class="podium-bar">3</div>
+            </div>
+        </div>
+
+        <div class="leaderboard-list" id="leader-list">
+            <div style="text-align: center; padding: 20px; color: var(--text-secondary); font-size: 12px;">Синхронизация с базой...</div>
         </div>
     </div>
 
     <div id="p-admin" class="page">
-        <div class="grid-2" style="margin-bottom: 15px;">
-            <div class="card" style="margin: 0; text-align: center; padding: 12px;">
-                <div style="font-size: 20px; font-weight: 900; color: var(--accent);" id="adm-users">0</div>
-                <div style="font-size: 9px; color: var(--text-muted);">ЮЗЕРОВ</div>
-            </div>
-            <div class="card" style="margin: 0; text-align: center; padding: 12px;">
-                <div style="font-size: 20px; font-weight: 900; color: var(--success);" id="adm-orders">0</div>
-                <div style="font-size: 9px; color: var(--text-muted);">АКТИВНЫХ ЗАКАЗОВ</div>
-            </div>
-        </div>
-
-        <div class="section-title">Управление</div>
+        <div class="section-title">Панель Владельца</div>
         <div class="grid-2">
-            <button class="btn btn-dark" style="font-size: 11px; padding: 12px;" onclick="admCmd('broadcast')">📢 Рассылка</button>
-            <button class="btn btn-dark" style="font-size: 11px; padding: 12px;" onclick="admCmd('promo_add')">🎟 Создать промо</button>
-            <button class="btn btn-dark" style="font-size: 11px; padding: 12px;" onclick="admCmd('staff')">👥 Персонал</button>
-            <button class="btn btn-dark" style="font-size: 11px; padding: 12px;" onclick="admCmd('ban')">🚫 Бан/Разбан</button>
-            <button class="btn btn-dark" style="font-size: 11px; padding: 12px;" onclick="admCmd('give_xp')">⚡ Выдать XP</button>
-            <button class="btn btn-dark" style="font-size: 11px; padding: 12px; border-color: var(--accent);" onclick="admCmd('clear_db')">🗑 Очистка БД</button>
+            <button class="btn btn-dark" onclick="admCmd('broadcast')">📢 Рассылка</button>
+            <button class="btn btn-dark" onclick="admCmd('staff')">👥 Персонал</button>
+            <button class="btn btn-dark" onclick="admCmd('give_bal')">💰 Выдать G</button>
+            <button class="btn btn-dark" onclick="admCmd('take_bal')">💸 Забрать G</button>
+            <button class="btn btn-dark" onclick="admCmd('give_xp')">⚡ Выдать XP</button>
+            <button class="btn btn-dark" onclick="admCmd('take_xp')">🥀 Забрать XP</button>
+            <button class="btn btn-dark" onclick="admCmd('create_promo')">🎟 Создать Промо</button>
+            <button class="btn btn-dark" onclick="admCmd('del_promo')">🗑 Удал. Промо</button>
+        </div>
+        <div class="grid-2" style="margin-top: 10px;">
+            <button class="btn btn-dark" onclick="admCmd('ban')">🚫 Бан/Разбан</button>
+            <button class="btn btn-danger" onclick="admCmd('clear_db')">🧹 Очистка БД</button>
         </div>
     </div>
 
     <nav>
-        <div class="nav-item active" onclick="nav('shop', this)"><span>🛒</span>МАГАЗИН</div>
-        <div class="nav-item" onclick="nav('profile', this)"><span>👤</span>ПРОФИЛЬ</div>
-        <div class="nav-item" onclick="nav('top', this)"><span>🏆</span>ТОП</div>
-        <div class="nav-item" onclick="nav('support', this)"><span>🛠</span>САППОРТ</div>
-        <div id="nav-adm" class="nav-item" style="display:none;" onclick="nav('admin', this)"><span>👑</span>АДМИН</div>
-                </nav>
-                <script>
+        <div class="nav-item active" onclick="showTab('shop', this)">
+            <i>🛒</i><span>Магазин</span>
+        </div>
+        <div class="nav-item" onclick="showTab('profile', this)">
+            <i>👤</i><span>Профиль</span>
+        </div>
+        <div class="nav-item" onclick="showTab('game', this)">
+            <i>🎯</i><span>Мини-игра</span>
+        </div>
+        <div class="nav-item" onclick="showTab('top', this)">
+            <i>🏆</i><span>Топ</span>
+        </div>
+        <div id="adm-btn" class="nav-item" style="display:none;" onclick="showTab('admin', this)">
+            <i>👑</i><span>Админ</span>
+        </div>
+    </nav>
+    <script>
         const tg = window.Telegram.WebApp;
-        const OWNER_ID = 6477651244;
-        let currentMethod = 'account';
+        let userXP = 0;
+        let userId = 0;
 
-        // Инициализация Mini App
+        // Переменные для мини-игры
+        let gameScore = 0;
+        let gameTime = 20;
+        let gameTimerId = null;
+        let isGameActive = false;
+
         tg.expand();
-        tg.enableClosingConfirmation();
         tg.ready();
 
-        // 1. Настройка прав и данных пользователя при входе
-        const user = tg.initDataUnsafe?.user;
-        if (user) {
-            document.getElementById('user-status').innerText = `ID: ${user.id} | ${user.username || 'User'}`;
-            document.getElementById('ref-link').innerText = `https://t.me/Vertex8_Bot?start=${user.id}`;
+        // 1. Инициализация и парсинг данных при загрузке
+        window.addEventListener('load', () => {
+            const params = new URLSearchParams(window.location.search);
             
-            // Если зашел владелец - открываем админку
-            if (user.id === OWNER_ID) {
-                document.getElementById('nav-adm').style.display = 'flex';
-            }
-        }
+            // Баланс и XP
+            document.getElementById('u-bal').innerText = (params.get('bal') || '0') + " G";
+            userXP = parseInt(params.get('xp') || '0');
+            document.getElementById('u-xp-text').innerText = userXP + " / 5000 XP";
+            
+            // Вычисление уровня (каждые 1000 XP = 1 уровень)
+            let level = Math.floor(userXP / 1000) + 1;
+            document.getElementById('u-lvl').innerText = level;
 
-        // 2. Навигация между страницами
-        function nav(pageId, el) {
+            // Анимация бара XP
+            const progress = Math.min((userXP / 5000) * 100, 100);
+            setTimeout(() => {
+                document.getElementById('u-xp-fill').style.width = progress + "%";
+            }, 300);
+
+            // Роль и ID
+            const role = params.get('role');
+            userId = params.get('id') || '000000';
+            
+            if (role === 'admin' || role === 'owner') {
+                document.getElementById('adm-btn').style.display = 'flex';
+                document.getElementById('u-role-badge').innerText = 'АДМИНИСТРАТОР';
+                document.getElementById('u-role-badge').style.color = 'var(--gold)';
+            } else if (role === 'booster') {
+                document.getElementById('u-role-badge').innerText = 'БУСТЕР';
+                document.getElementById('u-role-badge').style.color = 'var(--success)';
+            }
+
+            // Реферальная ссылка
+            document.getElementById('ref-link').innerText = `https://t.me/Vertex8_Bot?start=${userId}`;
+        });
+
+        // 2. Система навигации
+        function showTab(id, el) {
+            if(isGameActive) return showToast('Сначала завершите игру!', 'error');
+
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById('p-' + pageId).classList.add('active');
+            document.getElementById('p-' + id).classList.add('active');
             
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            if (el) el.classList.add('active');
-            
+            if(el) {
+                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                el.classList.add('active');
+            }
             tg.HapticFeedback.impactOccurred('light');
         }
 
-        // 3. Логика Магазина Буста
-        function checkCustomService() {
-            const select = document.getElementById('shop-service');
-            const customBlock = document.getElementById('custom-desc-block');
-            customBlock.style.display = select.value === 'SMULTI' ? 'block' : 'none';
+        // 3. Кастомные уведомления (Toasts)
+        function showToast(msg, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = type === 'success' ? `✅ ${msg}` : type === 'gold' ? `💰 ${msg}` : `❌ ${msg}`;
+            container.appendChild(toast);
+            
+            tg.HapticFeedback.notificationOccurred(type === 'error' ? 'error' : 'success');
+
+            setTimeout(() => {
+                toast.style.animation = 'slideInRight 0.3s forwards reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
         }
 
-        function setBoostMethod(method) {
-            currentMethod = method;
-            document.getElementById('m-acc').classList.toggle('selected', method === 'account');
-            document.getElementById('m-party').classList.toggle('selected', method === 'party');
-            tg.HapticFeedback.selectionChanged();
+        // 4. Логика Мини-игры (Aim Train)
+        function startGame() {
+            document.getElementById('game-intro').style.display = 'none';
+            document.getElementById('game-ui').style.display = 'block';
+            
+            gameScore = 0;
+            gameTime = 20;
+            isGameActive = true;
+            
+            document.getElementById('game-score').innerText = gameScore;
+            document.getElementById('game-time').innerText = gameTime;
+            
+            spawnTarget();
+            
+            gameTimerId = setInterval(() => {
+                gameTime--;
+                document.getElementById('game-time').innerText = gameTime;
+                
+                if (gameTime <= 0) {
+                    endGame();
+                }
+            }, 1000);
         }
 
-        function submitOrder() {
-            const orderData = {
-                action: "create_order_request", // Меняем название экшена
-                service_id: document.getElementById('shop-service').value,
-                mode: document.getElementById('shop-mode').value,
-                method: currentMethod,
-                standoff_id: document.getElementById('shop-id').value,
-                region: document.getElementById('shop-region').value,
-                description: document.getElementById('shop-desc').value || ""
+        function spawnTarget() {
+            const arena = document.getElementById('arena');
+            const target = document.getElementById('target');
+            
+            // Вычисляем случайную позицию, учитывая размер мишени (40px)
+            const maxX = arena.clientWidth - 40;
+            const maxY = arena.clientHeight - 40;
+            
+            const randomX = Math.floor(Math.random() * maxX);
+            const randomY = Math.floor(Math.random() * maxY);
+            
+            target.style.left = randomX + 'px';
+            target.style.top = randomY + 'px';
+            
+            // Анимация появления
+            target.classList.remove('active');
+            void target.offsetWidth; // Триггер рефлоу
+            target.classList.add('active');
+        }
+
+        function hitTarget(event) {
+            event.stopPropagation(); // Чтобы не сработал missClick
+            if (!isGameActive) return;
+
+            gameScore++;
+            document.getElementById('game-score').innerText = gameScore;
+            tg.HapticFeedback.impactOccurred('medium');
+            
+            document.getElementById('target').classList.remove('active');
+            setTimeout(spawnTarget, 100);
+        }
+
+        function missClick(event) {
+            if (!isGameActive) return;
+            tg.HapticFeedback.impactOccurred('rigid'); // Жесткий отклик при промахе
+        }
+
+        function endGame() {
+            clearInterval(gameTimerId);
+            isGameActive = false;
+            document.getElementById('target').classList.remove('active');
+            
+            document.getElementById('game-ui').style.display = 'none';
+            document.getElementById('game-intro').style.display = 'block';
+
+            if (gameScore >= 15) {
+                showToast(`Победа! Вы набрали ${gameScore} очков.`, 'success');
+                // Отправляем запрос боту на выдачу награды за игру
+                tg.sendData(JSON.stringify({ action: "minigame_win" }));
+            } else {
+                showToast(`Поражение. Вы набрали всего ${gameScore} очков.`, 'error');
+            }
+        }
+
+        // 5. Отправка заказа (Магазин)
+        function sendOrder() {
+            const data = {
+                action: "create_order_request",
+                service_id: document.getElementById('s-service').value,
+                mode: document.getElementById('s-mode').value,
+                method: document.getElementById('s-method').value,
+                standoff_id: document.getElementById('s-id').value,
+                region: document.getElementById('s-region').value,
+                description: document.getElementById('s-desc').value
             };
-
-            if (!orderData.standoff_id || orderData.standoff_id.length < 5) {
-                tg.showAlert("❌ Пожалуйста, введите ваш реальный ID в Standoff 2!");
-                return;
+            
+            if(!data.standoff_id || data.standoff_id.length < 5) {
+                return showToast("Введите корректный ID Standoff 2!", "error");
             }
 
-            tg.showConfirm(`Отправить запрос на буст? После подтверждения админ пришлет скин для оплаты в чат.`, (ok) => {
+            tg.showConfirm(`Отправить запрос? Админ пришлет скин для оплаты в чат.`, (ok) => {
                 if (ok) {
-                    tg.sendData(JSON.stringify(orderData));
-                    // Приложение закроется само после отправки данных
+                    tg.sendData(JSON.stringify(data));
+                    tg.close();
                 }
             });
         }
 
-        // 4. Логика Профиля и XP
-        function activatePromo() {
-            const code = document.getElementById('promo-input').value;
-            if (!code) return;
-            tg.sendData(JSON.stringify({ action: "use_promo", code: code }));
-        }
-
-        function claimDaily() {
-            tg.sendData(JSON.stringify({ action: "get_daily" }));
-        }
-
-        function buyGold(packageId) {
-            tg.showConfirm("Обменять накопленный XP на Gold?", (ok) => {
-                if (ok) {
-                    tg.sendData(JSON.stringify({ action: "exchange_xp", package: packageId }));
-                }
+        // 6. Обмен XP
+        function exchangeXP(pkg, cost) {
+            if(userXP < cost) {
+                return showToast(`Недостаточно XP! Нужно ${cost}, у вас ${userXP}`, "error");
+            }
+            tg.showConfirm(`Обменять ${cost} XP на Gold?`, (ok) => {
+                if (ok) tg.sendData(JSON.stringify({ action: "exchange_xp", package: pkg }));
             });
         }
 
-        // 5. Функции Бустера
-        function takeOrder(orderId) {
-            tg.sendData(JSON.stringify({ action: "booster_take", order_id: orderId }));
+        // 7. Промокоды и Бонусы
+        function usePromo() {
+            const val = document.getElementById('promo-val').value;
+            if(!val) return showToast("Введите код!", "error");
+            tg.sendData(JSON.stringify({ action: "use_promo", code: val }));
         }
 
-        // 6. Функции Администратора
+        function sendAction(act) {
+            tg.sendData(JSON.stringify({ action: act }));
+        }
+
+        // 8. Админ панель
         function admCmd(type) {
-            let value = "";
-            
-            if (type === 'broadcast') {
-                tg.showPopup({ title: 'Рассылка', message: 'Для рассылки напишите сообщение в чат бота после нажатия кнопки.' });
-            }
-            
             tg.sendData(JSON.stringify({ action: "admin_action", type: type }));
         }
 
-        // 7. Утилиты
+        // 9. Копирование реф. ссылки
         function copyRef() {
             const link = document.getElementById('ref-link').innerText;
             const el = document.createElement('textarea');
@@ -448,38 +550,8 @@
             el.select();
             document.execCommand('copy');
             document.body.removeChild(el);
-            
-            tg.showPopup({ message: "🔗 Ссылка скопирована в буфер обмена!" });
-            tg.HapticFeedback.notificationOccurred('success');
+            showToast("Ссылка скопирована!", "success");
         }
-
-        // 8. Пример получения данных (Для интеграции с твоим Python скриптом)
-        // Эти данные бот должен передать при открытии приложения через URL или стартовые параметры
-        window.addEventListener('load', () => {
-            // 1. Сообщаем Телеграму, что сайт готов
-            tg.ready();
-            tg.expand(); // Разворачиваем на весь экран
-
-            // 2. Достаем данные из ссылки
-            const urlParams = new URLSearchParams(window.location.search);
-            const balance = urlParams.get('bal') || '0';
-            const xp = urlParams.get('xp') || '0';
-            const role = urlParams.get('role') || 'client';
-
-            // 3. Записываем данные в профиль
-            document.getElementById('prof-bal').innerText = balance + " G";
-            document.getElementById('prof-xp').innerText = xp;
-
-            // 4. ЕСЛИ РОЛЬ АДМИН - ПОКАЗЫВАЕМ КНОПКУ АДМИНКИ
-            if (role === 'admin' || role === 'owner') {
-                document.getElementById('admin-nav-btn').style.display = 'flex';
-            } else {
-                document.getElementById('admin-nav-btn').style.display = 'none';
-            }
-
-            // 5. ПО УМОЛЧАНИЮ ОТКРЫВАЕМ ВКЛАДКУ ПРОФИЛЯ (чтобы не было пустого экрана)
-            showTab('profile');
-        });
     </script>
 </body>
 </html>
