@@ -472,28 +472,29 @@
                 });
             }
 
-            // ПАРСИНГ ЗАКАЗОВ ДЛЯ БУСТЕРА
+            // ПАРСИНГ ЗАКАЗОВ БУСТЕРА (КРАСИВЫЙ ДИЗАЙН)
             const ordersData = params.get('orders');
             const ordersBox = document.getElementById('booster-orders');
             if(ordersData && role !== 'client' && ordersBox) {
                 ordersBox.innerHTML = "";
                 const orders = ordersData.split('|');
                 orders.forEach(o => {
+                    if(!o) return;
                     const [oid, svc, price] = o.split(':');
                     ordersBox.innerHTML += `
-                        <div class="card" style="border-left: 4px solid #00aaff;">
-                            <div style="display:flex; justify-content:space-between; font-weight:800;">
-                                <span>Заказ #${oid}</span>
-                                <span style="color:var(--gold)">${price}</span>
+                        <div class="order-card">
+                            <div class="order-header">
+                                <span class="order-id">#${oid}</span>
+                                <span class="order-price">${price}</span>
                             </div>
-                            <div style="font-size:12px; color:#aaa; margin:10px 0;">Услуга: ${svc}</div>
-                            <button class="btn" style="background:#00aaff; color:#fff; padding:10px;" onclick="takeOrder(${oid})">Принять в работу</button>
+                            <div class="order-tags">
+                                <span class="o-tag tag-svc">${svc}</span>
+                                <span class="o-tag tag-mode">ОЖИДАЕТ</span>
+                            </div>
+                            <button class="btn" style="background: linear-gradient(45deg, #0055ff, #00aaff); border-radius: 10px; padding: 12px; font-size: 12px;" onclick="takeOrder(${oid})">ВЗЯТЬ В РАБОТУ</button>
                         </div>`;
                 });
-            } else if (role !== 'client' && ordersBox) {
-                ordersBox.innerHTML = "<div style='text-align:center; color:#777; padding:20px;'>Нет доступных заказов</div>";
             }
-        });
 
         // 2. ВЫБОР В МАГАЗИНЕ (КАРТОЧКИ)
         function selSvc(el, val) {
@@ -549,78 +550,177 @@
             }, 3000);
         }
 
-        // 5. ЛОГИКА МИНИ-ИГРЫ
-        function startGame() {
-            if(canPlay === "false") return;
-            document.getElementById('game-intro').style.display = 'none';
-            document.getElementById('game-ui').style.display = 'block';
+        // --- ЛОГИКА АИМ ТРЕНИРОВКИ ---
+        function startAimGame() {
+            if(canPlay === "false") return showToast("Вы уже играли сегодня!", "error");
+            document.getElementById('game-menu').style.display = 'none';
+            document.getElementById('aim-ui').style.display = 'block';
+            gameScore = 0; gameTime = 20; isGameActive = true;
+            document.getElementById('aim-score').innerText = gameScore;
             
-            gameScore = 0;
-            gameTime = 20;
-            isGameActive = true;
-            
-            document.getElementById('game-score').innerText = gameScore;
-            document.getElementById('game-time').innerText = gameTime;
-            
-            spawnTarget();
-            
+            spawnAim();
             gameTimerId = setInterval(() => {
-                gameTime--;
-                document.getElementById('game-time').innerText = gameTime;
-                if (gameTime <= 0) endGame();
+                gameTime--; document.getElementById('aim-time').innerText = gameTime;
+                if(gameTime <= 0) endAimGame();
             }, 1000);
         }
 
-        function spawnTarget() {
+        function spawnAim() {
             const arena = document.getElementById('arena');
             const target = document.getElementById('target');
-            if(!arena || !target) return;
+            target.classList.remove('show');
             
-            target.style.display = 'none';
-            const maxX = arena.clientWidth - 40;
-            const maxY = arena.clientHeight - 40;
-            target.style.left = Math.floor(Math.random() * maxX) + 'px';
-            target.style.top = Math.floor(Math.random() * maxY) + 'px';
-            
-            setTimeout(() => { target.style.display = 'block'; }, 50);
+            setTimeout(() => {
+                const maxX = arena.clientWidth - 50;
+                const maxY = arena.clientHeight - 50;
+                target.style.left = Math.floor(Math.random() * maxX) + 'px';
+                target.style.top = Math.floor(Math.random() * maxY) + 'px';
+                target.classList.add('show');
+            }, 50); // Миллисекунды для срабатывания анимации
         }
 
-        function hitTarget(event) {
+        function hitAim(event) {
             event.stopPropagation();
-            if (!isGameActive) return;
-
-            gameScore++;
-            document.getElementById('game-score').innerText = gameScore;
+            if(!isGameActive) return;
+            gameScore++; document.getElementById('aim-score').innerText = gameScore;
             tg.HapticFeedback.impactOccurred('medium');
-            
-            document.getElementById('target').style.display = 'none';
-            setTimeout(spawnTarget, 100);
+            spawnAim();
         }
 
-        function missClick(event) {
-            if (!isGameActive) return;
-            tg.HapticFeedback.impactOccurred('rigid');
+        function missAim() {
+            if(isGameActive) tg.HapticFeedback.impactOccurred('rigid');
         }
 
-        function endGame() {
-            clearInterval(gameTimerId);
-            isGameActive = false;
-            document.getElementById('target').style.display = 'none';
+        function endAimGame() {
+            clearInterval(gameTimerId); isGameActive = false;
+            document.getElementById('target').classList.remove('show');
+            document.getElementById('aim-ui').style.display = 'none';
+            document.getElementById('game-menu').style.display = 'block';
+            canPlay = "false";
             
-            document.getElementById('game-ui').style.display = 'none';
-            document.getElementById('game-intro').style.display = 'block';
-            
-            canPlay = "false"; // Блокируем игру до перезагрузки
-
-            if (gameScore >= 15) {
+            if(gameScore >= 15) {
                 showToast(`Победа! Вы набрали ${gameScore} очков.`, 'success');
-                tg.sendData(JSON.stringify({ action: "minigame_win" }));
+                tg.sendData(JSON.stringify({ action: "minigame_win", game: "aim" }));
             } else {
                 showToast(`Поражение. Счёт: ${gameScore}.`, 'error');
-                // Отправляем сигнал о проигрыше, чтобы бот записал дату и не дал играть снова
                 tg.sendData(JSON.stringify({ action: "minigame_lose" }));
             }
         }
+
+        // --- ЛОГИКА САМОЛЕТА (ВЫЖИВАНИЕ) ---
+        let planeInterval, bulletInterval;
+        let pX = 50, pY = 80; // Проценты
+
+        function startPlaneGame() {
+            if(canPlay === "false") return showToast("Вы уже играли сегодня!", "error");
+            document.getElementById('game-menu').style.display = 'none';
+            document.getElementById('plane-ui').style.display = 'block';
+            
+            gameTime = 60; isGameActive = true;
+            document.getElementById('plane-time').innerText = gameTime;
+            
+            const arena = document.getElementById('plane-arena');
+            const plane = document.getElementById('plane');
+            
+            // Управление пальцем
+            arena.addEventListener('touchmove', (e) => {
+                if(!isGameActive) return;
+                e.preventDefault();
+                const rect = arena.getBoundingClientRect();
+                const touch = e.touches[0];
+                let x = touch.clientX - rect.left;
+                let y = touch.clientY - rect.top;
+                
+                // Ограничения
+                if(x < 15) x = 15; if(x > rect.width - 15) x = rect.width - 15;
+                if(y < 15) y = 15; if(y > rect.height - 15) y = rect.height - 15;
+                
+                plane.style.left = x + 'px';
+                plane.style.top = y + 'px';
+            }, {passive: false});
+
+            // Таймер
+            gameTimerId = setInterval(() => {
+                gameTime--; document.getElementById('plane-time').innerText = gameTime;
+                if(gameTime <= 0) endPlaneGame(true);
+            }, 1000);
+
+            // Спавн пуль
+            bulletInterval = setInterval(spawnBullet, 300); // Высокая сложность
+            
+            // Проверка столкновений
+            planeInterval = setInterval(checkCollisions, 50);
+        }
+
+        function spawnBullet() {
+            if(!isGameActive) return;
+            const arena = document.getElementById('plane-arena');
+            const bullet = document.createElement('div');
+            bullet.className = 'bullet';
+            
+            // 70% сверху, 30% сбоку
+            if(Math.random() > 0.3) {
+                bullet.style.left = Math.random() * 95 + '%';
+                bullet.style.top = '-20px';
+                arena.appendChild(bullet);
+                animateBullet(bullet, 0, 10); // Падает вниз
+            } else {
+                bullet.style.top = Math.random() * 80 + '%';
+                let leftSide = Math.random() > 0.5;
+                bullet.style.left = leftSide ? '-20px' : '105%';
+                bullet.style.width = '15px'; bullet.style.height = '6px'; // Горизонтальная пуля
+                arena.appendChild(bullet);
+                animateBullet(bullet, leftSide ? 10 : -10, 0);
+            }
+        }
+
+        function animateBullet(b, dx, dy) {
+            let posX = parseFloat(b.style.left) || (b.style.left.includes('%') ? b.offsetLeft : -20);
+            let posY = parseFloat(b.style.top) || -20;
+            
+            const anim = setInterval(() => {
+                if(!isGameActive) { clearInterval(anim); b.remove(); return; }
+                if(dx !== 0) { posX += dx; b.style.left = posX + 'px'; }
+                if(dy !== 0) { posY += dy; b.style.top = posY + 'px'; }
+                
+                if(posY > 400 || posX > 500 || posX < -50) {
+                    clearInterval(anim); b.remove();
+                }
+            }, 30);
+        }
+
+        function checkCollisions() {
+            const plane = document.getElementById('plane').getBoundingClientRect();
+            const bullets = document.querySelectorAll('.bullet');
+            
+            bullets.forEach(b => {
+                const br = b.getBoundingClientRect();
+                // Уменьшенный хитбокс самолета (чтобы было честно)
+                if (br.left < plane.right - 5 && br.right > plane.left + 5 &&
+                    br.top < plane.bottom - 5 && br.bottom > plane.top + 5) {
+                    endPlaneGame(false);
+                }
+            });
+        }
+
+        function endPlaneGame(win) {
+            isGameActive = false;
+            clearInterval(gameTimerId); clearInterval(bulletInterval); clearInterval(planeInterval);
+            document.querySelectorAll('.bullet').forEach(b => b.remove());
+            
+            document.getElementById('plane-ui').style.display = 'none';
+            document.getElementById('game-menu').style.display = 'block';
+            canPlay = "false";
+
+            if(win) {
+                showToast("Выживание пройдено! Вы профи.", "success");
+                tg.sendData(JSON.stringify({ action: "minigame_win", game: "plane" }));
+            } else {
+                tg.HapticFeedback.notificationOccurred('error');
+                showToast(`Самолет сбит! Вы продержались ${60 - gameTime} сек.`, "error");
+                tg.sendData(JSON.stringify({ action: "minigame_lose" }));
+            }
+                    }
 
         // 6. ОТПРАВКА ЗАКАЗА И БУСТЕР
         function sendOrder() {
