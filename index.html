@@ -276,8 +276,9 @@
         <div class="grid-2">
             <button class="btn btn-dark" onclick="sendAction('get_daily')">🎁 Бонус</button>
             <button class="btn btn-dark" onclick="showTab('xpshop')">🏪 Магазин XP</button>
+            <button class="btn btn-outline" style="border-color: #00aaff; color: #00aaff;" onclick="refreshApp()">🔄 Обновить данные</button>
         </div>
-
+        
         <div class="section-title">Достижения</div>
         <div class="achieve-row">
             <div class="achieve-icon">🎖</div>
@@ -624,10 +625,22 @@
             if(!container) return;
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
-            toast.innerHTML = type === 'success' ? `✅ ${msg}` : type === 'gold' ? `💰 ${msg}` : `❌ ${msg}`;
+            
+            // Если это успешное действие - добавляем твою фразу
+            let finalMsg = msg;
+            if(type === 'success') {
+                finalMsg = msg + "<br><span style='font-size: 9px; opacity: 0.8;'>Напишите ещё раз /start для обновления результата</span>";
+            }
+            
+            toast.innerHTML = type === 'success' ? `✅ ${finalMsg}` : type === 'gold' ? `💰 ${msg}` : `❌ ${msg}`;
             container.appendChild(toast);
+            
             tg.HapticFeedback.notificationOccurred(type === 'error' ? 'error' : 'success');
-            setTimeout(() => { toast.style.animation = 'slideInRight 0.3s forwards reverse'; setTimeout(() => toast.remove(), 300); }, 3000);
+
+            setTimeout(() => {
+                toast.style.animation = 'slideInRight 0.3s forwards reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000); // Увеличил время до 4 секунд, чтобы успели прочитать
         }
 
         // --- ЛОГИКА АИМ ТРЕНИРОВКИ ---
@@ -823,6 +836,10 @@
             const el = document.createElement('textarea'); el.value = link;
             document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el);
             showToast("Ссылка скопирована!", "success");
+        }
+        function refreshApp() {
+            tg.sendData(JSON.stringify({ action: "refresh_request" }));
+            tg.close();
         }
     </script>
 
