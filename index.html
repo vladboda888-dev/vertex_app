@@ -589,10 +589,10 @@
         <div class="nav-item" onclick="showTab('profile', this)"><i>👤</i><span>Профиль</span></div>
         <div class="nav-item" onclick="showTab('game', this)"><i>🎯</i><span>Мини-игра</span></div>
         <div class="nav-item" onclick="showTab('top', this)"><i>🏆</i><span>Топ</span></div>
-        <div class="nav-item" onclick="showTab('news', this)">
         <div class="nav-item" onclick="showTab('clans', this)">
             <div style="font-size: 20px; margin-bottom: 4px;">🛡️</div>Кланы
         </div>
+        <div class="nav-item" onclick="showTab('news', this)">
             <div style="font-size: 20px; margin-bottom: 4px;">📰</div>
             Новости
         </div>
@@ -602,8 +602,9 @@
         </div>
         <div id="nav-booster" class="nav-item" style="display:none; color: #00aaff;" onclick="showTab('booster', this)"><i>⚡</i><span>Бустер</span></div>
         <div id="nav-admin" class="nav-item" style="display:none;" onclick="showTab('admin', this)"><i>👑</i><span>Админ</span></div>
+    </nav>
 
-        <div id="p-clans" class="page">
+    <div id="p-clans" class="page">
         <div class="section-title">Внутриигровые Кланы</div>
         <div id="my-clan-admin" class="card" style="display:none; border-color: var(--gold);">
             <div style="color: var(--gold); font-weight: 800; font-size: 12px; margin-bottom: 10px;">👑 Управление кланом</div>
@@ -620,8 +621,8 @@
             </div>
         </div>
         <div id="clans-list">
-            </div>
         </div>
+    </div>
         
     </nav>
     <script>
@@ -755,6 +756,9 @@
                     } else {
                         leaderList.innerHTML += `<div class="leader-item ${frameClass}"><div class="leader-rank">#${index + 1}</div><div class="leader-name" style="color:${color}; font-weight:900;">${name}</div><div class="leader-xp">${xp} XP</div></div>`;
                     }
+                });
+            }
+
             // Парсинг кланов
             const clansData = params.get('clans');
             const clansBox = document.getElementById('clans-list');
@@ -798,9 +802,7 @@
             } else if (clansBox) {
                 clansBox.innerHTML = "<div style='text-align:center; color:#777; padding:20px;'>Кланов пока нет</div>";
             }
-                });
-            }
-
+            
             const ordersData = params.get('orders');
             const ordersBox = document.getElementById('booster-orders');
             if(ordersData && role !== 'client' && ordersBox) {
