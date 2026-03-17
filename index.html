@@ -606,6 +606,27 @@
 
     <div id="p-clans" class="page">
         <div class="section-title">Внутриигровые Кланы</div>
+        
+        <div class="card card-gold" style="margin-bottom: 20px; border: 1px solid var(--gold); box-shadow: 0 0 15px rgba(255, 200, 0, 0.1);">
+            <div style="display:flex; align-items:center; gap: 12px; margin-bottom: 12px;">
+                <div style="font-size: 28px; text-shadow: 0 0 10px var(--gold);">👑</div>
+                <div>
+                    <div style="font-size: 14px; font-weight: 900; color: var(--gold); text-transform: uppercase; letter-spacing: 1px;">Создай свой клан</div>
+                    <div style="font-size: 10px; color: #ccc;">Официальный статус в Vertex App</div>
+                </div>
+            </div>
+            <div style="font-size: 11px; color: #ddd; margin-bottom: 12px; line-height: 1.5;">
+                Хочешь объединить друзей и набирать лучших игроков? Приобрети клан у создателя бота и получи полный контроль:
+                <ul style="margin-top: 8px; margin-bottom: 8px; padding-left: 20px; color: var(--text-secondary); font-weight: 600;">
+                    <li>Панель управления кланом</li>
+                    <li>Публикация новостей для всех пользователей</li>
+                    <li>Специальная карточка в общем списке</li>
+                    <li>Уникальная роль владельца</li>
+                </ul>
+            </div>
+            <button class="btn btn-gold" style="padding: 12px; font-size: 12px;" onclick="tg.openTelegramLink('https://t.me/@Zentrox_1')">Купить клан у Администратора</button>
+        </div>
+
         <div id="my-clan-admin" class="card" style="display:none; border-color: var(--gold);">
             <div style="color: var(--gold); font-weight: 800; font-size: 12px; margin-bottom: 10px;">👑 Управление кланом</div>
             <input type="text" id="clan-desc-input" placeholder="Описание клана">
@@ -620,7 +641,18 @@
                 <button class="btn btn-outline" onclick="postClanNews()">Опубликовать</button>
             </div>
         </div>
+        
         <div id="clans-list">
+            </div>
+
+        <div id="clan-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(3,3,3,0.95); z-index:2000; padding:20px; overflow-y:auto; backdrop-filter: blur(10px);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid var(--border-color); padding-bottom:15px; margin-top: 10px;">
+                <div id="modal-clan-title" style="font-size: 20px; font-weight: 900; color: var(--gold); font-family: 'Orbitron'; text-shadow: 0 0 10px rgba(255,200,0,0.3);">Название</div>
+                <button onclick="closeClanModal()" style="background:none; border:none; color:var(--danger); font-size:30px; font-weight:300; cursor:pointer; padding: 0 10px;">&times;</button>
+            </div>
+            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 15px; text-transform: uppercase; font-weight: 800;">Новости клана</div>
+            <div id="modal-clan-posts">
+                </div>
         </div>
     </div>
         
@@ -633,7 +665,8 @@
         let canPlane = "false";
         let canWheel = "false";
         let canParkour = "false";
-
+        let globalClanPosts = [];
+        
         let gameScore = 0;
         let gameTime = 20;
         let gameTimerId = null;
@@ -759,6 +792,15 @@
                 });
             }
 
+            // Парсинг постов кланов
+            const cPostsData = params.get('cposts');
+            if (cPostsData) {
+                globalClanPosts = cPostsData.split('|').map(p => {
+                    const parts = p.split('*');
+                    return { clanId: parts[0], text: parts[1], time: parts[2] };
+                }).filter(p => p.clanId);
+            }
+
             // Парсинг кланов
             const clansData = params.get('clans');
             const clansBox = document.getElementById('clans-list');
@@ -773,7 +815,6 @@
                     if (!c) return;
                     const [cId, cName, cOwnerId, cDesc, cIsOpen, cOwnerName] = c.split('*');
 
-                    // Если юзер является владельцем клана - показываем ему админ-панель
                     if (cOwnerId === userId.toString()) {
                         hasMyClan = true;
                         const descInput = document.getElementById('clan-desc-input');
@@ -785,14 +826,18 @@
                     const statusColor = cIsOpen === '1' ? 'var(--success)' : 'var(--danger)';
                     const statusText = cIsOpen === '1' ? 'Открыт' : 'Закрыт';
 
+                    // ДОБАВИЛИ КЛАСС card-clickable и функцию onclick
                     clansBox.innerHTML += `
-                        <div class="card" style="border-left: 4px solid var(--gold);">
+                        <div class="card card-clickable" style="border-left: 4px solid var(--gold);" onclick="openClanModal('${cId}', '${cName}')">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                                 <div style="font-size: 16px; font-weight: 900; font-family: 'Orbitron'; color: var(--gold);">${cName}</div>
                                 <div style="font-size: 10px; font-weight: 800; color: ${statusColor};">${statusText}</div>
                             </div>
                             <div style="font-size: 11px; color: #ccc; margin-bottom: 8px;">${cDesc}</div>
-                            <div style="font-size: 10px; color: var(--text-secondary);">👑 Владелец: @${cOwnerName !== 'null' ? cOwnerName : 'Скрыт'}</div>
+                            <div style="font-size: 10px; color: var(--text-secondary); display:flex; justify-content:space-between;">
+                                <span>👑 Владелец: @${cOwnerName !== 'null' ? cOwnerName : 'Скрыт'}</span>
+                                <span style="color:#00aaff;">📰 Открыть новости</span>
+                            </div>
                         </div>`;
                 });
 
@@ -1355,6 +1400,39 @@
             showToast("Настройки клана сохранены!");
         }
 
+        function openClanModal(cId, cName) {
+            document.getElementById('modal-clan-title').innerText = cName;
+            const postsBox = document.getElementById('modal-clan-posts');
+            postsBox.innerHTML = "";
+
+            // Ищем посты только для этого клана
+            const clanPosts = globalClanPosts.filter(p => p.clanId === cId.toString());
+
+            if (clanPosts.length > 0) {
+                clanPosts.forEach(p => {
+                    postsBox.innerHTML += `
+                        <div class="card" style="border-left: 3px solid #00aaff; margin-bottom: 12px; padding: 15px; background: rgba(0, 170, 255, 0.03);">
+                            <div style="font-size: 10px; color: #777; margin-bottom: 8px; font-weight: 800;">🕒 Опубликовано: ${p.time}</div>
+                            <div style="font-size: 13px; color: #eee; line-height: 1.5;">${p.text}</div>
+                        </div>`;
+                });
+            } else {
+                postsBox.innerHTML = `
+                    <div style="text-align:center; padding: 40px 20px; background: var(--bg-surface-light); border-radius: var(--radius-md); border: 1px dashed var(--border-color);">
+                        <div style="font-size: 30px; margin-bottom: 10px; opacity: 0.5;">📭</div>
+                        <div style="color:#777; font-size: 12px;">В этом клане пока нет новостей.</div>
+                    </div>`;
+            }
+
+            document.getElementById('clan-modal').style.display = 'block';
+            tg.HapticFeedback.impactOccurred('medium');
+        }
+
+        function closeClanModal() {
+            document.getElementById('clan-modal').style.display = 'none';
+            tg.HapticFeedback.impactOccurred('light');
+        }
+        
         function postClanNews() {
             const text = document.getElementById('clan-post-input').value;
             if(!text) return;
