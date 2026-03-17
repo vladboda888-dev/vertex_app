@@ -568,7 +568,7 @@
         let canPlane = "false";
         let canWheel = "false";
         let canParkour = "false";
-        
+
         let gameScore = 0;
         let gameTime = 20;
         let gameTimerId = null;
@@ -598,17 +598,20 @@
             canPlane = params.get('plane') || "false";
             canWheel = params.get('wheel') || "false";
             canParkour = params.get('pk') || "false";
-            
+
             const role = params.get('role');
             userId = params.get('id') || '000000';
             
             const badge = document.getElementById('u-role-badge');
             if (role === 'admin' || role === 'owner') {
-                document.getElementById('nav-admin').style.display = 'flex';
-                document.getElementById('nav-booster').style.display = 'flex';
+                const navAdmin = document.getElementById('nav-admin');
+                const navBooster = document.getElementById('nav-booster');
+                if(navAdmin) navAdmin.style.display = 'flex';
+                if(navBooster) navBooster.style.display = 'flex';
                 if(badge) { badge.innerText = 'АДМИНИСТРАТОР'; badge.style.color = 'var(--gold)'; }
             } else if (role === 'booster') {
-                document.getElementById('nav-booster').style.display = 'flex';
+                const navBooster = document.getElementById('nav-booster');
+                if(navBooster) navBooster.style.display = 'flex';
                 if(badge) { badge.innerText = 'БУСТЕР'; badge.style.color = '#00aaff'; }
             }
 
@@ -655,35 +658,11 @@
                 const players = topData.split('|');
                 players.forEach((p, index) => {
                     if(!p) return;
-                    const [name, xp] = p.split(':');
-                    const shortName = name.length > 7 ? name.substring(0, 7) + ".." : name;
-                    
-                    // Обновленный дизайн подиума (по центру, с опытом)
-                    const podiumHTML = `<div style="display:flex; flex-direction:column; align-items:center;"><div style="font-size:10px; color:#fff; margin-bottom:2px; font-weight:700;">${shortName}</div><div style="font-size:20px; line-height:1;">${index + 1}</div><div style="font-size:8px; margin-top:4px; color:var(--gold);">${xp} XP</div></div>`;
-                    
-                    if (index === 0) {
-                        const r1 = document.querySelector('.rank-1 .podium-bar');
-                        if(r1) r1.innerHTML = podiumHTML;
-                    } else if (index === 1) {
-                        const r2 = document.querySelector('.rank-2 .podium-bar');
-                        if(r2) r2.innerHTML = podiumHTML;
-                    } else if (index === 2) {
-                        const r3 = document.querySelector('.rank-3 .podium-bar');
-                        if(r3) r3.innerHTML = podiumHTML;
-                    } else {
-                        leaderList.innerHTML += `<div class="leader-item"><div class="leader-rank">#${index + 1}</div><div class="leader-name">${name}</div><div class="leader-xp">${xp} XP</div></div>`;
-                    }
-                });
-            }
-            // Парсинг ТОПА с кастомизацией
-            const topData = params.get('top');
-            const leaderList = document.getElementById('leader-list');
-            if(topData && leaderList) {
-                leaderList.innerHTML = "";
-                const players = topData.split('|');
-                players.forEach((p, index) => {
-                    if(!p) return;
-                    const [name, xp, color, frame] = p.split(':');
+                    const parts = p.split(':');
+                    const name = parts[0] || "NoName";
+                    const xp = parts[1] || "0";
+                    const color = parts[2] || "#ffffff";
+                    const frame = parts[3] || "none";
                     const shortName = name.length > 7 ? name.substring(0, 7) + ".." : name;
                     
                     const frameClass = frame !== 'none' ? frame : '';
@@ -704,60 +683,28 @@
                 });
             }
 
-            // Парсинг Новостей
-            const newsData = params.get('news');
-            const newsBox = document.getElementById('news-container');
-            if(newsData && newsBox) {
-                newsBox.innerHTML = "";
-                const newsItems = newsData.split('|');
-                newsItems.forEach(n => {
-                    if(!n) return;
-                    const [ava, banner, title, text, link] = n.split('*');
-                    let bannerHTML = banner !== 'none' ? `<img src="${banner}" class="news-banner">` : '';
-                    newsBox.innerHTML += `
-                        <div class="news-card">
-                            <div class="news-header">
-                                <img src="${ava}" class="news-ava">
-                                <div class="news-title">${title}</div>
-                            </div>
-                            ${bannerHTML}
-                            <div class="news-text">${text}</div>
-                            <div style="padding: 0 12px 12px;"><a href="${link}" class="btn" style="text-decoration:none; display:block; text-align:center;">Перейти</a></div>
-                        </div>`;
-                });
-            }
-
-            // Парсинг Чата
-            const chatData = params.get('chat');
-            const chatBox = document.getElementById('chat-container');
-            if(chatData && chatBox) {
-                chatBox.innerHTML = "";
-                const msgs = chatData.split('|');
-                msgs.forEach(m => {
-                    if(!m) return;
-                    const [name, text, color] = m.split('*');
-                    chatBox.innerHTML += `
-                        <div class="chat-msg">
-                            <div class="chat-name" style="color:${color};">${name}</div>
-                            <div>${text}</div>
-                        </div>`;
-                });
-            }
-     
-            // ПАРСИНГ РАСШИРЕННЫХ ЗАКАЗОВ БУСТЕРА
             const ordersData = params.get('orders');
             const ordersBox = document.getElementById('booster-orders');
             if(ordersData && role !== 'client' && ordersBox) {
                 ordersBox.innerHTML = "";
                 const orders = ordersData.split('|');
+                
                 const elBOrders = document.getElementById('b-stat-orders');
                 if(elBOrders) elBOrders.innerText = orders[0] === "" ? "0" : orders.length;
 
                 orders.forEach(o => {
                     if(!o) return;
-                    // Ожидаемый формат: id:service:price:standoff_id:client_username:status:booster_id:booster_name:description
-                    // Ожидаемый формат: id:service:price:standoff_id:client_username:status:booster_id:booster_name:description:method
-                    const [oid, svc, price, stId, clientName, oStatus, boosterId, boosterName, desc, method] = o.split(':');
+                    const parts = o.split(':');
+                    const oid = parts[0];
+                    const svc = parts[1];
+                    const price = parts[2];
+                    const stId = parts[3];
+                    const clientName = parts[4];
+                    const oStatus = parts[5];
+                    const boosterId = parts[6];
+                    const boosterName = parts[7];
+                    const desc = parts[8];
+                    const method = parts[9];
                     
                     let tagText = "ОЖИДАЕТ БУСТЕРА";
                     let tagColor = "rgba(230, 0, 0, 0.1)";
@@ -806,6 +753,44 @@
             } else if (role !== 'client' && ordersBox) {
                 ordersBox.innerHTML = "<div style='text-align:center; color:#777; padding:20px;'>Нет доступных заказов</div>";
             }
+
+            const newsData = params.get('news');
+            const newsBox = document.getElementById('news-container');
+            if(newsData && newsBox) {
+                newsBox.innerHTML = "";
+                const newsItems = newsData.split('|');
+                newsItems.forEach(n => {
+                    if(!n) return;
+                    const [ava, banner, title, text, link] = n.split('*');
+                    let bannerHTML = banner !== 'none' ? `<img src="${banner}" class="news-banner">` : '';
+                    newsBox.innerHTML += `
+                        <div class="news-card">
+                            <div class="news-header">
+                                <img src="${ava}" class="news-ava">
+                                <div class="news-title">${title}</div>
+                            </div>
+                            ${bannerHTML}
+                            <div class="news-text">${text}</div>
+                            <div style="padding: 0 12px 12px;"><a href="${link}" class="btn" style="text-decoration:none; display:block; text-align:center;">Перейти</a></div>
+                        </div>`;
+                });
+            }
+
+            const chatData = params.get('chat');
+            const chatBox = document.getElementById('chat-container');
+            if(chatData && chatBox) {
+                chatBox.innerHTML = "";
+                const msgs = chatData.split('|');
+                msgs.forEach(m => {
+                    if(!m) return;
+                    const [name, text, color] = m.split('*');
+                    chatBox.innerHTML += `
+                        <div class="chat-msg">
+                            <div class="chat-name" style="color:${color};">${name}</div>
+                            <div>${text}</div>
+                        </div>`;
+                });
+            }
         });
 
         function refreshApp() { tg.sendData(JSON.stringify({ action: "refresh_request" })); tg.close(); }
@@ -843,14 +828,40 @@
             if(!container) return;
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
-            
             let finalMsg = msg;
             if(type === 'success') finalMsg = msg + "<br><span style='font-size: 9px; opacity: 0.8;'>Напишите ещё раз /start для обновления результата</span>";
-            
             toast.innerHTML = type === 'success' ? `✅ ${finalMsg}` : type === 'gold' ? `💰 ${msg}` : `❌ ${msg}`;
             container.appendChild(toast);
             tg.HapticFeedback.notificationOccurred(type === 'error' ? 'error' : 'success');
             setTimeout(() => { toast.style.animation = 'slideInRight 0.3s forwards reverse'; setTimeout(() => toast.remove(), 300); }, 4000);
+        }
+
+        function switchChatTab(tab) {
+            document.getElementById('tab-chat').style.display = tab === 'chat' ? 'block' : 'none';
+            document.getElementById('tab-shop').style.display = tab === 'shop' ? 'block' : 'none';
+            document.querySelectorAll('#p-chat .b-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function sendChatMessage() {
+            const msg = document.getElementById('chat-input').value;
+            if(msg.length < 2) return showToast("Сообщение слишком короткое!", "error");
+            tg.showAlert("Сообщение отправлено! Приложение закроется.", () => {
+                tg.sendData(JSON.stringify({ action: "send_chat", message: msg }));
+                tg.close();
+            });
+        }
+
+        function buyCustom(type, val, cost) {
+            if(userXP < cost) return showToast(`Нужно ${cost} XP!`, "error");
+            tg.showConfirm(`Купить этот стиль за ${cost} XP?`, (ok) => {
+                if(ok) {
+                    tg.showAlert("Стиль применен! Приложение закроется.", () => {
+                        tg.sendData(JSON.stringify({ action: "buy_customization", item_type: type, item_val: val, cost: cost }));
+                        tg.close();
+                    });
+                }
+            });
         }
 
         function startAimGame() {
@@ -893,7 +904,6 @@
             document.getElementById('aim-ui').style.display = 'none';
             document.getElementById('game-menu').style.display = 'block';
             canAim = "false";
-            
             if(gameScore >= 15) {
                 showToast(`Победа! Вы набрали ${gameScore} очков.`, 'success');
                 tg.sendData(JSON.stringify({ action: "minigame_win", game: "aim" }));
@@ -906,7 +916,7 @@
         let planeInterval, bulletInterval;
         let pX = 50, pY = 80;
 
-        function startPlaneGame() {
+                function startPlaneGame() {
             if(canPlane === "false") return showToast("Доступно 1 раз в день!", "error");
             document.getElementById('game-menu').style.display = 'none';
             document.getElementById('plane-ui').style.display = 'block';
@@ -978,7 +988,6 @@
             document.getElementById('plane-ui').style.display = 'none';
             document.getElementById('game-menu').style.display = 'block';
             canPlane = "false";
-
             if(win) {
                 showToast("Выживание пройдено! Вы профи.", "success");
                 tg.sendData(JSON.stringify({ action: "minigame_win", game: "plane" }));
@@ -989,27 +998,25 @@
             }
         }
 
-        // --- КОЛЕСО ФОРТУНЫ ---
         function startWheel() {
             if(canWheel === "false") return showToast("Доступно 1 раз в день!", "error");
             document.getElementById('game-menu').style.display = 'none';
-            document.getElementById('wheel-ui').style.display = 'block';
+            const wUi = document.getElementById('wheel-ui');
+            if(wUi) wUi.style.display = 'block';
         }
 
         function spinWheel() {
             const btn = document.getElementById('wheel-btn');
-            btn.disabled = true; btn.style.opacity = '0.5';
-            
-            // Настройка шансов (weight)
+            if(btn) { btn.disabled = true; btn.style.opacity = '0.5'; }
             const outcomes = [
                 { text: "15 Gold", type: "gold", val: 15, weight: 15 },
                 { text: "ПУСТОТА", type: "empty", val: 0, weight: 55 },
                 { text: "50 XP", type: "xp", val: 50, weight: 28 },
                 { text: "100 Gold", type: "gold", val: 100, weight: 2 }
             ];
-            
             let ticks = 0;
             const resEl = document.getElementById('wheel-result');
+            if(!resEl) return;
             const interval = setInterval(() => {
                 const randomItem = outcomes[Math.floor(Math.random() * outcomes.length)];
                 resEl.innerText = randomItem.text;
@@ -1019,8 +1026,7 @@
                 if(ticks > 25) {
                     clearInterval(interval);
                     const rand = Math.random() * 100;
-                    let cum = 0;
-                    let finalRes = outcomes[1]; 
+                    let cum = 0; let finalRes = outcomes[1]; 
                     for(let o of outcomes) {
                         cum += o.weight;
                         if(rand <= cum) { finalRes = o; break; }
@@ -1028,9 +1034,8 @@
                     resEl.innerText = finalRes.text;
                     resEl.style.color = finalRes.type === 'gold' ? 'var(--gold)' : (finalRes.type === 'empty' ? '#ff3333' : '#00aaff');
                     tg.HapticFeedback.notificationOccurred(finalRes.type === 'empty' ? 'error' : 'success');
-                    
                     setTimeout(() => {
-                        tg.showAlert(`Результат: ${finalRes.text}. Приложение закроется для сохранения.`, () => {
+                        tg.showAlert(`Результат: ${finalRes.text}. Приложение закроется.`, () => {
                             tg.sendData(JSON.stringify({ action: "wheel_result", reward_type: finalRes.type, reward_val: finalRes.val }));
                             tg.close();
                         });
@@ -1039,23 +1044,21 @@
             }, 100);
         }
 
-        // --- ХАРДКОР ПАРКУР ---
         let pkInterval, obInterval;
         let isJumping = false;
         
         function startParkourGame() {
             if(canParkour === "false") return showToast("Доступно 1 раз в день!", "error");
             document.getElementById('game-menu').style.display = 'none';
-            document.getElementById('parkour-ui').style.display = 'block';
+            const pkUi = document.getElementById('parkour-ui');
+            if(pkUi) pkUi.style.display = 'block';
             gameTime = 30; isGameActive = true;
             document.getElementById('parkour-time').innerText = gameTime;
-            
             gameTimerId = setInterval(() => {
                 gameTime--; document.getElementById('parkour-time').innerText = gameTime;
                 if(gameTime <= 0) endParkourGame(true);
             }, 1000);
-
-            obInterval = setInterval(spawnObstacle, 700); // Препятствия спавнятся очень быстро
+            obInterval = setInterval(spawnObstacle, 700); 
             pkInterval = setInterval(checkPkCollision, 20);
         }
         
@@ -1063,33 +1066,35 @@
             if(!isGameActive || isJumping) return;
             isJumping = true;
             const player = document.getElementById('pk-player');
-            player.style.bottom = '90px'; // Высота прыжка
+            if(player) player.style.bottom = '90px'; 
             tg.HapticFeedback.impactOccurred('light');
             setTimeout(() => {
-                player.style.bottom = '0px';
-                setTimeout(() => { isJumping = false; }, 300); // Время восстановления прыжка
+                if(player) player.style.bottom = '0px';
+                setTimeout(() => { isJumping = false; }, 300); 
             }, 350);
         }
         
         function spawnObstacle() {
             if(!isGameActive) return;
             const arena = document.getElementById('parkour-arena');
+            if(!arena) return;
             const ob = document.createElement('div');
             ob.className = 'pk-obstacle';
             ob.style.cssText = 'position: absolute; bottom: 0; right: -20px; width: 25px; height: 35px; background: #ff3333; border-radius: 4px; box-shadow: 0 0 10px #ff3333;';
             arena.appendChild(ob);
-            
             let pos = -20;
             const move = setInterval(() => {
                 if(!isGameActive) { clearInterval(move); ob.remove(); return; }
-                pos += 10; // Скорость движения (очень быстро)
+                pos += 10; 
                 ob.style.right = pos + 'px';
                 if(pos > arena.clientWidth) { clearInterval(move); ob.remove(); }
             }, 20);
         }
         
         function checkPkCollision() {
-            const player = document.getElementById('pk-player').getBoundingClientRect();
+            const playerEl = document.getElementById('pk-player');
+            if(!playerEl) return;
+            const player = playerEl.getBoundingClientRect();
             document.querySelectorAll('.pk-obstacle').forEach(ob => {
                 const br = ob.getBoundingClientRect();
                 if (br.left < player.right - 10 && br.right > player.left + 10 && br.top < player.bottom - 5 && br.bottom > player.top + 5) {
@@ -1101,22 +1106,22 @@
         function endParkourGame(win) {
             isGameActive = false; clearInterval(gameTimerId); clearInterval(obInterval); clearInterval(pkInterval);
             document.querySelectorAll('.pk-obstacle').forEach(b => b.remove());
-            document.getElementById('parkour-ui').style.display = 'none';
+            const pkUi = document.getElementById('parkour-ui');
+            if(pkUi) pkUi.style.display = 'none';
             document.getElementById('game-menu').style.display = 'block';
             canParkour = "false";
-
             if(win) {
-                tg.showAlert("Паркур пройден! Вы просто киберспортсмен. Сохраняем результат.", () => {
+                tg.showAlert("Паркур пройден! Вы киберспортсмен.", () => {
                     tg.sendData(JSON.stringify({ action: "minigame_win", game: "parkour" }));
                 });
             } else {
                 tg.HapticFeedback.notificationOccurred('error');
-                tg.showAlert(`Вы разбились об куб! Продержались ${30 - gameTime} сек. Приложение закроется.`, () => {
+                tg.showAlert(`Вы разбились! Продержались ${30 - gameTime} сек.`, () => {
                     tg.sendData(JSON.stringify({ action: "minigame_lose", game: "parkour" }));
                 });
             }
         }
-        
+
         function sendOrder() {
             const activeBox = document.getElementById('my-active-order');
             if (activeBox && activeBox.style.display === 'block') {
@@ -1135,46 +1140,18 @@
             };
             tg.showConfirm(`Отправить запрос?`, (ok) => {
                 if (ok) { 
-                    tg.showAlert("✅ Запрос отправлен! Обязательно напишите /start в боте, чтобы обновить профиль.", () => {
-                        tg.sendData(JSON.stringify(data)); 
+                    tg.showAlert("✅ Запрос отправлен! Приложение закроется.", () => {
+                        tg.sendData(JSON.stringify(data)); tg.close();
                     });
                 }
             });
         }
 
-        function switchChatTab(tab) {
-            document.getElementById('tab-chat').style.display = tab === 'chat' ? 'block' : 'none';
-            document.getElementById('tab-shop').style.display = tab === 'shop' ? 'block' : 'none';
-            document.querySelectorAll('#p-chat .b-tab').forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
-        }
-
-        function sendChatMessage() {
-            const msg = document.getElementById('chat-input').value;
-            if(msg.length < 2) return showToast("Сообщение слишком короткое!", "error");
-            tg.showAlert("Сообщение отправлено! Приложение перезапустится.", () => {
-                tg.sendData(JSON.stringify({ action: "send_chat", message: msg }));
-                tg.close();
-            });
-        }
-
-        function buyCustom(type, val, cost) {
-            if(userXP < cost) return showToast(`Нужно ${cost} XP!`, "error");
-            tg.showConfirm(`Купить этот стиль за ${cost} XP?`, (ok) => {
-                if(ok) {
-                    tg.showAlert("Стиль применен! Приложение перезапустится.", () => {
-                        tg.sendData(JSON.stringify({ action: "buy_customization", item_type: type, item_val: val, cost: cost }));
-                        tg.close();
-                    });
-                }
-            });
-        }
-        
         function cancelMyOrder() {
             tg.showConfirm("Точно отменить текущий заказ?", (ok) => {
                 if(ok) { 
-                    tg.showAlert("✅ Заказ отменен. Напишите /start в боте для обновления.", () => {
-                        tg.sendData(JSON.stringify({action: "cancel_order"})); 
+                    tg.showAlert("✅ Заказ отменен. Приложение закроется.", () => {
+                        tg.sendData(JSON.stringify({action: "cancel_order"})); tg.close();
                     });
                 }
             });
@@ -1183,8 +1160,8 @@
         function refundMyOrder() {
             tg.showConfirm("Сделать возврат? Штраф 20% от цены.", (ok) => {
                 if(ok) { 
-                    tg.showAlert("✅ Возврат оформлен. Напишите /start в боте для обновления баланса.", () => {
-                        tg.sendData(JSON.stringify({action: "refund_order"})); 
+                    tg.showAlert("✅ Возврат оформлен. Приложение закроется.", () => {
+                        tg.sendData(JSON.stringify({action: "refund_order"})); tg.close();
                     });
                 }
             });
@@ -1193,8 +1170,8 @@
         function takeOrder(oid) {
             tg.showConfirm(`Взять заказ #${oid} в работу?`, (ok) => {
                 if(ok) { 
-                    tg.showAlert("⚡ Заказ взят в работу! Напишите /start в боте для обновления панели.", () => {
-                        tg.sendData(JSON.stringify({ action: "booster_take", order_id: oid })); 
+                    tg.showAlert("⚡ Заказ взят в работу! Приложение закроется.", () => {
+                        tg.sendData(JSON.stringify({ action: "booster_take", order_id: oid })); tg.close();
                     });
                 }
             });
@@ -1203,23 +1180,23 @@
         function cancelBoosterOrder(oid) {
             tg.showConfirm(`Точно отказаться от заказа #${oid}? Он вернется в биржу.`, (ok) => {
                 if(ok) { 
-                    tg.showAlert("⚠️ Вы отказались от заказа. Напишите /start в боте для обновления.", () => {
-                        tg.sendData(JSON.stringify({ action: "booster_cancel", order_id: oid })); 
+                    tg.showAlert("⚠️ Вы отказались от заказа.", () => {
+                        tg.sendData(JSON.stringify({ action: "booster_cancel", order_id: oid })); tg.close();
                     });
                 }
             });
         }
 
         function completeBoosterOrder(oid) {
-            tg.showConfirm(`Подтвердить выполнение #${oid}? Тебе нужно будет отправить скриншот в чат с ботом.`, (ok) => {
+            tg.showConfirm(`Подтвердить выполнение #${oid}? Тебе нужно будет отправить скриншот в чат.`, (ok) => {
                 if(ok) { 
-                    tg.showAlert("📸 Приложение закроется. Отправь скриншот выполненной работы боту прямо сейчас!", () => {
-                        tg.sendData(JSON.stringify({ action: "booster_complete", order_id: oid })); 
+                    tg.showAlert("📸 Приложение закроется. Отправь скриншот!", () => {
+                        tg.sendData(JSON.stringify({ action: "booster_complete", order_id: oid })); tg.close();
                     });
                 }
             });
         }
-        
+
         function exchangeXP(pkg, cost) {
             if(userXP < cost) return showToast(`Недостаточно XP! Нужно ${cost}`, "error");
             tg.showConfirm(`Обменять ${cost} XP на Gold?`, (ok) => {
