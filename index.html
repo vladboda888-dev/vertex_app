@@ -412,10 +412,12 @@
             <button class="btn btn-dark" onclick="admCmd('ban')">🚫 Бан/Разбан</button>
             <button class="btn btn-danger" onclick="admCmd('del_order')">🗑 Удал. заказ</button>
             <button class="btn btn-dark" onclick="admCmd('post_news')">📰 Пост в Новости</button>
+            <button class="btn btn-dark" onclick="admCmd('create_clan')">🛡 Создать клан</button>
         </div>
         <div class="grid-2" style="margin-top: 10px;">
             <button class="btn btn-dark" onclick="admCmd('check_user')">🔍 Чекнуть юзера</button>
             <button class="btn btn-danger" onclick="admCmd('del_news')">🗑 Удал. новость</button>
+            <button class="btn btn-danger" onclick="admCmd('del_clan')" style="grid-column: span 2; margin-top: 10px;">🗑 Удалить клан по ID</button>
         </div>
         <div class="grid-2" style="margin-top: 10px;">
             <button class="btn btn-danger" onclick="admCmd('clear_chat')" style="grid-column: span 2;">🧹 Полностью очистить чат</button>
@@ -620,13 +622,23 @@
             
             document.getElementById('u-bal').innerText = (params.get('bal') || '0') + " G";
             userXP = parseInt(params.get('xp') || '0');
-            document.getElementById('u-xp-text').innerText = userXP + " / 5000 XP";
-            
-            let level = Math.floor(userXP / 1000) + 1;
-            const lvlEl = document.getElementById('u-lvl');
-            if(lvlEl) lvlEl.innerText = level;
+        document.getElementById('u-xp-text').innerText = userXP + " / 5000 XP";
+        
+        // Твой новый код с рангами
+        function getRank(xp) {
+            if(xp < 500) return "Слабак";
+            if(xp < 1500) return "Нормасик";
+            if(xp < 3000) return "Мастер Гуру";
+            if(xp < 8500) return "Магистр";
+            return "Легенда";
+        }
+        
+        let level = Math.floor(userXP / 1000) + 1;
+        const rankName = getRank(userXP);
+        const lvlEl = document.getElementById('u-lvl');
+        if(lvlEl) lvlEl.innerText = `${level} ур. - ${rankName}`;
 
-            const progress = Math.min((userXP / 5000) * 100, 100);
+        const progress = Math.min((userXP / 5000) * 100, 100);
             setTimeout(() => {
                 const fillEl = document.getElementById('u-xp-fill');
                 if(fillEl) fillEl.style.width = progress + "%";
@@ -815,23 +827,33 @@
                 });
             }
 
-            // Парсинг Чата с аватарками и рамками
+            // Парсинг Чата с аватарками, рамками и рангами
             const chatData = params.get('chat');
             const chatBox = document.getElementById('chat-container');
             if(chatData && chatBox) {
                 chatBox.innerHTML = "";
                 const msgs = chatData.split('|');
+                
                 // Читаем с конца, чтобы новые сообщения были внизу
                 msgs.reverse().forEach(m => {
                     if(!m) return;
-                    const [name, text, color, frame] = m.split('*');
+                    // Добавили xpStr для получения опыта
+                    const [name, text, color, frame, xpStr] = m.split('*');
                     
-                    // Генерируем крутую динамическую аватарку с первой буквой ника!
                     const cleanColor = color.replace('#', '');
                     const avatarUrl = `https://ui-avatars.com/api/?name=${name}&background=1a1a20&color=${cleanColor}&font-size=0.4&bold=true&rounded=true`;
                     
                     const frameClass = (frame && frame !== 'none') ? frame : '';
                     const neonClass = color !== '#ffffff' ? 'neon-text' : '';
+
+                    // Вычисляем ранг для чата
+                    const msgXp = parseInt(xpStr || '0');
+                    let chatRank = "Бронза";
+                    let rankColor = "#cd7f32"; 
+                    if(msgXp >= 8500) { chatRank = "Легенда"; rankColor = "#ff00ff"; }
+                    else if(msgXp >= 3000) { chatRank = "Мастер Гуру"; rankColor = "#ff3333"; }
+                    else if(msgXp >= 1500) { chatRank = "Качок"; rankColor = "var(--gold)"; }
+                    else if(msgXp >= 600) { chatRank = "Нормасик"; rankColor = "#c0c0c0"; }
 
                     chatBox.innerHTML += `
                         <div class="chat-msg">
@@ -840,7 +862,10 @@
                                 <img src="${avatarUrl}" class="chat-avatar">
                             </div>
                             <div class="chat-bubble">
-                                <div class="chat-name ${neonClass}" style="color:${color};">${name}</div>
+                                <div class="chat-name ${neonClass}" style="color:${color}; display: flex; align-items: center; gap: 6px;">
+                                    ${name} 
+                                    <span style="font-size: 8px; color: ${rankColor}; background: rgba(255,255,255,0.05); padding: 2px 4px; border-radius: 4px; border: 1px solid ${rankColor}40;">${chatRank}</span>
+                                </div>
                                 <div class="chat-text">${text}</div>
                             </div>
                         </div>`;
