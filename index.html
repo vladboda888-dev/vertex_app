@@ -164,6 +164,29 @@
         /* Исправление шариков аима */
         .target { position: absolute; width: 45px; height: 45px; background: radial-gradient(circle, #fff 20%, var(--accent) 30%, var(--accent) 100%); border-radius: 50%; box-shadow: 0 0 15px var(--accent-glow); cursor: crosshair; transform: scale(0); transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .target.show { transform: scale(1); }
+
+        /* Адаптивная сетка магазина (чтобы кнопки не слипались) */
+        .grid-services { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .card-svc { padding: 12px 6px; text-align: center; display: flex; flex-direction: column; justify-content: center; }
+        .svc-name { font-weight: 800; font-size: 10px; margin-bottom: 4px; line-height: 1.2; }
+        .svc-price { color: var(--gold); font-size: 10px; font-weight: 700; }
+
+        /* Аналитические панели (Бустер и Админ) */
+        .stats-row { display: flex; gap: 8px; margin-bottom: 15px; }
+        .stat-card { flex: 1; background: var(--bg-surface-light); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 12px 5px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .stat-val { font-size: 16px; font-weight: 900; color: var(--accent); font-family: 'Orbitron'; margin-bottom: 4px; }
+        .stat-label { font-size: 8px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 800; }
+
+        /* Достижения в профиле */
+        .achieve-row { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--bg-surface); border-radius: var(--radius-sm); border: 1px solid var(--border-color); margin-bottom: 8px; transition: 0.2s; }
+        .achieve-icon { width: 38px; height: 38px; min-width: 38px; border-radius: 50%; background: rgba(255, 200, 0, 0.1); display: flex; align-items: center; justify-content: center; font-size: 18px; border: 1px solid rgba(255, 200, 0, 0.3); }
+        .achieve-info { flex: 1; }
+        .achieve-title { font-size: 11px; font-weight: 800; color: #fff; margin-bottom: 3px; }
+        .achieve-desc { font-size: 9px; color: var(--text-secondary); line-height: 1.3; }
+
+        /* Расширенная карточка заказа бустера */
+        .order-detail { font-size: 11px; color: #ccc; margin: 4px 0; display: flex; align-items: center; gap: 6px; }
+        .order-detail i { color: #00aaff; font-style: normal; font-size: 12px; }
     </style>
 </head>
 <body>
@@ -178,54 +201,46 @@
 
     <div id="p-shop" class="page active">
         <div class="section-title">Выберите услугу</div>
-        <div class="grid-2" id="service-grid">
-            <div class="card card-clickable selected" onclick="selSvc(this, 'S1')">
-                <div style="font-weight:800; font-size:12px;">Silver -> Gold</div>
-                <div style="color:var(--gold); font-size:11px; margin-top:5px;">45 G</div>
+        <div class="grid-services" id="service-grid">
+            <div class="card card-clickable selected card-svc" onclick="selSvc(this, 'S1')">
+                <div class="svc-name">Silver -> Gold</div><div class="svc-price">45 G</div>
             </div>
-            <div class="card card-clickable" onclick="selSvc(this, 'S2')">
-                <div style="font-weight:800; font-size:12px;">Gold -> Phoenix</div>
-                <div style="color:var(--gold); font-size:11px; margin-top:5px;">60 G</div>
+            <div class="card card-clickable card-svc" onclick="selSvc(this, 'S2')">
+                <div class="svc-name">Gold -> Phoenix</div><div class="svc-price">60 G</div>
             </div>
-            <div class="card card-clickable" onclick="selSvc(this, 'S3')">
-                <div style="font-weight:800; font-size:12px;">Phoenix -> Ranger</div>
-                <div style="color:var(--gold); font-size:11px; margin-top:5px;">75 G</div>
+            <div class="card card-clickable card-svc" onclick="selSvc(this, 'S3')">
+                <div class="svc-name">Phoenix -> Ranger</div><div class="svc-price">75 G</div>
             </div>
-            <div class="card card-clickable" onclick="selSvc(this, 'S4')">
-                <div style="font-weight:800; font-size:12px;">Ranger -> Champion</div>
-                <div style="color:var(--gold); font-size:11px; margin-top:5px;">85 G</div>
+            <div class="card card-clickable card-svc" onclick="selSvc(this, 'S4')">
+                <div class="svc-name">Ranger -> Champion</div><div class="svc-price">85 G</div>
             </div>
-            <div class="card card-clickable" onclick="selSvc(this, 'S5')">
-                <div style="font-weight:800; font-size:12px;">Champion -> Master</div>
-                <div style="color:var(--gold); font-size:11px; margin-top:5px;">95 G</div>
+            <div class="card card-clickable card-svc" onclick="selSvc(this, 'S5')">
+                <div class="svc-name">Champion -> Master</div><div class="svc-price">95 G</div>
             </div>
-            <div class="card card-clickable" onclick="selSvc(this, 'S6')">
-                <div style="font-weight:800; font-size:12px;">Master -> Elite</div>
-                <div style="color:var(--gold); font-size:11px; margin-top:5px;">120 G</div>
+            <div class="card card-clickable card-svc" onclick="selSvc(this, 'S6')">
+                <div class="svc-name">Master -> Elite</div><div class="svc-price">120 G</div>
             </div>
-            <div class="card card-clickable" onclick="selSvc(this, 'S7')">
-                <div style="font-weight:800; font-size:12px;">Elite -> Legend</div>
-                <div style="color:var(--gold); font-size:11px; margin-top:5px;">190 G</div>
+            <div class="card card-clickable card-svc" onclick="selSvc(this, 'S7')">
+                <div class="svc-name">Elite -> Legend</div><div class="svc-price">190 G</div>
             </div>
-            <div class="card card-clickable" onclick="selSvc(this, 'SMULTI')">
-                <div style="font-weight:800; font-size:12px;">Свой заказ</div>
-                <div style="color:var(--gold); font-size:11px; margin-top:5px;">Индив.</div>
+            <div class="card card-clickable card-svc" onclick="selSvc(this, 'SMULTI')">
+                <div class="svc-name">Свой заказ</div><div class="svc-price">Индив.</div>
             </div>
         </div>
         <input type="hidden" id="s-service" value="S1">
 
         <div class="section-title">Режим игры</div>
-        <div class="grid-2" id="mode-grid">
-            <div class="card card-clickable selected" onclick="selMode(this, 'M1')">ММ (5x5)</div>
-            <div class="card card-clickable" onclick="selMode(this, 'M2')">Напарники</div>
-            <div class="card card-clickable" onclick="selMode(this, 'M3')">Дуэли</div>
+        <div class="grid-services" id="mode-grid">
+            <div class="card card-clickable selected card-svc" onclick="selMode(this, 'M1')"><div class="svc-name" style="margin:0;">ММ (5x5)</div></div>
+            <div class="card card-clickable card-svc" onclick="selMode(this, 'M2')"><div class="svc-name" style="margin:0;">Напарники</div></div>
+            <div class="card card-clickable card-svc" onclick="selMode(this, 'M3')"><div class="svc-name" style="margin:0;">Дуэли</div></div>
         </div>
         <input type="hidden" id="s-mode" value="M1">
 
         <div class="section-title">Метод буста</div>
-        <div class="grid-2" id="method-grid">
-            <div class="card card-clickable selected" onclick="selMeth(this, 'account')">Вход в аккаунт</div>
-            <div class="card card-clickable" onclick="selMeth(this, 'party')">В лобби (+35%)</div>
+        <div class="grid-services" id="method-grid">
+            <div class="card card-clickable selected card-svc" onclick="selMeth(this, 'account')"><div class="svc-name" style="margin:0;">Вход в аккаунт</div></div>
+            <div class="card card-clickable card-svc" onclick="selMeth(this, 'party')"><div class="svc-name" style="margin:0;">В лобби (+35%)</div></div>
         </div>
         <input type="hidden" id="s-method" value="account">
 
@@ -239,7 +254,6 @@
         <div class="card card-gold">
             <div style="color: var(--gold); font-size: 11px; font-weight: 800; letter-spacing: 1px;">ВАШ БАЛАНС</div>
             <div style="font-size: 36px; font-weight: 900; font-family: 'Orbitron'; margin: 5px 0;" id="u-bal">0 G</div>
-            
             <div class="xp-container">
                 <div class="xp-header">
                     <span>УРОВЕНЬ <b id="u-lvl" style="color: #fff;">1</b></span>
@@ -254,18 +268,85 @@
             <button class="btn btn-dark" onclick="showTab('xpshop')">🏪 Магазин XP</button>
         </div>
 
-        <div class="section-title">Промокоды и Бонусы</div>
+        <div class="section-title">Достижения</div>
+        <div class="achieve-row">
+            <div class="achieve-icon">🎖</div>
+            <div class="achieve-info">
+                <div class="achieve-title">Новобранец</div>
+                <div class="achieve-desc">Зарегистрироваться в системе Vertex Ultimate.</div>
+            </div>
+        </div>
+        <div class="achieve-row">
+            <div class="achieve-icon" style="background: rgba(0, 255, 102, 0.1); border-color: rgba(0, 255, 102, 0.3);">🎯</div>
+            <div class="achieve-info">
+                <div class="achieve-title">Стрелок</div>
+                <div class="achieve-desc">Сыграть в тренировку Аима в игровом центре.</div>
+            </div>
+        </div>
+
+        <div class="section-title">Промокоды</div>
         <div style="display: flex; gap: 10px; margin-bottom: 15px;">
             <input type="text" id="promo-val" placeholder="Введите код..." style="margin:0;">
             <button class="btn" style="width: auto; padding: 0 25px;" onclick="usePromo()">OK</button>
         </div>
-
+        
         <div class="card">
             <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600;">ВАША РЕФЕРАЛЬНАЯ ССЫЛКА</div>
             <div id="ref-link" style="background: var(--bg-surface-light); padding: 12px; border-radius: 8px; font-size: 11px; color: var(--accent); border: 1px dashed var(--border-color); word-break: break-all; margin-bottom: 10px;">
                 Загрузка...
             </div>
             <button class="btn btn-dark" style="padding: 12px; font-size: 12px;" onclick="copyRef()">Копировать</button>
+        </div>
+    </div>
+
+    <div id="p-booster" class="page">
+        <div class="section-title" style="color: #00aaff;">Аналитика Бустера</div>
+        <div class="stats-row">
+            <div class="stat-card" style="border-color: rgba(0, 170, 255, 0.3);">
+                <div class="stat-val" style="color: #00aaff;" id="b-stat-orders">0</div>
+                <div class="stat-label">Доступно заказов</div>
+            </div>
+            <div class="stat-card" style="border-color: rgba(255, 204, 0, 0.3);">
+                <div class="stat-val" style="color: var(--gold);" id="b-stat-earned">В работе</div>
+                <div class="stat-label">Статус выплат</div>
+            </div>
+        </div>
+
+        <div class="section-title" style="color: #00aaff;">Биржа заказов</div>
+        <div id="booster-orders"></div>
+    </div>
+
+    <div id="p-admin" class="page">
+        <div class="section-title">Сводка системы</div>
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-val" id="adm-users">0</div>
+                <div class="stat-label">Юзеров</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-val" id="adm-boosters">0</div>
+                <div class="stat-label">Бустеров</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-val" id="adm-orders">0</div>
+                <div class="stat-label">Заказов</div>
+            </div>
+        </div>
+
+        <div class="section-title">Управление</div>
+        <div class="grid-2">
+            <button class="btn btn-dark" onclick="admCmd('broadcast')">📢 Рассылка</button>
+            <button class="btn btn-dark" onclick="admCmd('staff')">👥 Персонал</button>
+            <button class="btn btn-dark" onclick="admCmd('give_bal')">💰 Выдать G</button>
+            <button class="btn btn-dark" onclick="admCmd('take_bal')">💸 Забрать G</button>
+            <button class="btn btn-dark" onclick="admCmd('give_xp')">⚡ Выдать XP</button>
+            <button class="btn btn-dark" onclick="admCmd('take_xp')">🥀 Забрать XP</button>
+            <button class="btn btn-dark" onclick="admCmd('create_promo')">🎟 Создать Промо</button>
+            <button class="btn btn-dark" onclick="admCmd('del_promo')">🗑 Удал. Промо</button>
+        </div>
+        <div class="grid-2" style="margin-top: 10px;">
+            <button class="btn btn-dark" onclick="admCmd('ban')">🚫 Бан/Разбан</button>
+            <button class="btn btn-danger" onclick="admCmd('clear_db')">🧹 Очистка БД</button>
         </div>
     </div>
 
