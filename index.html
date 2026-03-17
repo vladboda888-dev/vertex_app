@@ -590,6 +590,9 @@
         <div class="nav-item" onclick="showTab('game', this)"><i>🎯</i><span>Мини-игра</span></div>
         <div class="nav-item" onclick="showTab('top', this)"><i>🏆</i><span>Топ</span></div>
         <div class="nav-item" onclick="showTab('news', this)">
+        <div class="nav-item" onclick="showTab('clans', this)">
+            <div style="font-size: 20px; margin-bottom: 4px;">🛡️</div>Кланы
+        </div>
             <div style="font-size: 20px; margin-bottom: 4px;">📰</div>
             Новости
         </div>
@@ -599,6 +602,27 @@
         </div>
         <div id="nav-booster" class="nav-item" style="display:none; color: #00aaff;" onclick="showTab('booster', this)"><i>⚡</i><span>Бустер</span></div>
         <div id="nav-admin" class="nav-item" style="display:none;" onclick="showTab('admin', this)"><i>👑</i><span>Админ</span></div>
+
+        <div id="p-clans" class="page">
+        <div class="section-title">Внутриигровые Кланы</div>
+        <div id="my-clan-admin" class="card" style="display:none; border-color: var(--gold);">
+            <div style="color: var(--gold); font-weight: 800; font-size: 12px; margin-bottom: 10px;">👑 Управление кланом</div>
+            <input type="text" id="clan-desc-input" placeholder="Описание клана">
+            <select id="clan-status">
+                <option value="1">Набор открыт</option>
+                <option value="0">Набор закрыт</option>
+            </select>
+            <button class="btn btn-gold" onclick="saveClan()">Сохранить настройки</button>
+            
+            <div style="margin-top: 15px;">
+                <input type="text" id="clan-post-input" placeholder="Новость для клана">
+                <button class="btn btn-outline" onclick="postClanNews()">Опубликовать</button>
+            </div>
+        </div>
+        <div id="clans-list">
+            </div>
+        </div>
+        
     </nav>
     <script>
         const tg = window.Telegram.WebApp;
@@ -731,6 +755,49 @@
                     } else {
                         leaderList.innerHTML += `<div class="leader-item ${frameClass}"><div class="leader-rank">#${index + 1}</div><div class="leader-name" style="color:${color}; font-weight:900;">${name}</div><div class="leader-xp">${xp} XP</div></div>`;
                     }
+            // Парсинг кланов
+            const clansData = params.get('clans');
+            const clansBox = document.getElementById('clans-list');
+            const myClanAdmin = document.getElementById('my-clan-admin');
+
+            if (clansData && clansBox) {
+                clansBox.innerHTML = "";
+                const clans = clansData.split('|');
+                let hasMyClan = false;
+
+                clans.forEach(c => {
+                    if (!c) return;
+                    const [cId, cName, cOwnerId, cDesc, cIsOpen, cOwnerName] = c.split('*');
+
+                    // Если юзер является владельцем клана - показываем ему админ-панель
+                    if (cOwnerId === userId.toString()) {
+                        hasMyClan = true;
+                        const descInput = document.getElementById('clan-desc-input');
+                        const statusSelect = document.getElementById('clan-status');
+                        if(descInput) descInput.value = cDesc;
+                        if(statusSelect) statusSelect.value = cIsOpen;
+                    }
+
+                    const statusColor = cIsOpen === '1' ? 'var(--success)' : 'var(--danger)';
+                    const statusText = cIsOpen === '1' ? 'Открыт' : 'Закрыт';
+
+                    clansBox.innerHTML += `
+                        <div class="card" style="border-left: 4px solid var(--gold);">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                <div style="font-size: 16px; font-weight: 900; font-family: 'Orbitron'; color: var(--gold);">${cName}</div>
+                                <div style="font-size: 10px; font-weight: 800; color: ${statusColor};">${statusText}</div>
+                            </div>
+                            <div style="font-size: 11px; color: #ccc; margin-bottom: 8px;">${cDesc}</div>
+                            <div style="font-size: 10px; color: var(--text-secondary);">👑 Владелец: @${cOwnerName !== 'null' ? cOwnerName : 'Скрыт'}</div>
+                        </div>`;
+                });
+
+                if (hasMyClan && myClanAdmin) {
+                    myClanAdmin.style.display = 'block';
+                }
+            } else if (clansBox) {
+                clansBox.innerHTML = "<div style='text-align:center; color:#777; padding:20px;'>Кланов пока нет</div>";
+            }
                 });
             }
 
@@ -1279,6 +1346,20 @@
             });
         }
 
+        function saveClan() {
+            const desc = document.getElementById('clan-desc-input').value;
+            const isOpen = document.getElementById('clan-status').value;
+            tg.sendData(JSON.stringify({ action: "edit_clan", desc: desc, is_open: isOpen }));
+            showToast("Настройки клана сохранены!");
+        }
+
+        function postClanNews() {
+            const text = document.getElementById('clan-post-input').value;
+            if(!text) return;
+            tg.sendData(JSON.stringify({ action: "post_clan", text: text }));
+            showToast("Новость опубликована!");
+        }
+        
         function exchangeXP(pkg, cost) {
             if(userXP < cost) return showToast(`Недостаточно XP! Нужно ${cost}`, "error");
             tg.showConfirm(`Обменять ${cost} XP на Gold?`, (ok) => {
