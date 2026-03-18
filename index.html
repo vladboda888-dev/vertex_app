@@ -101,12 +101,13 @@
         /* === ПРЕМИУМ НОВОСТИ === */
         .news-card-pro {
             background: var(--bg-surface); border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 20px; overflow: hidden; margin-bottom: 24px;
+            border-radius: 20px; margin-bottom: 24px;
             box-shadow: 0 12px 35px rgba(0,0,0,0.7);
+            -webkit-mask-image: -webkit-radial-gradient(white, black); /* <-- ЭТОТ ФИКС ЗАСТАВИТ УГЛЫ ОБРЕЗАТЬСЯ */
             transform: translateZ(0);
         }
-        .news-img-wrap { position: relative; width: 100%; height: 230px; }
-        .news-img-wrap img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
+        .news-img-wrap { position: relative; width: 100%; height: 230px; border-radius: 20px 20px 0 0; }
+        .news-img-wrap img { width: 100%; height: 100%; object-fit: cover; object-position: top center; border-radius: 20px 20px 0 0; display: block; }
         .news-gradient {
             position: absolute; bottom: 0; left: 0; width: 100%; height: 120px;
             background: linear-gradient(to top, var(--bg-surface) 0%, transparent 100%);
@@ -725,6 +726,47 @@
             <div style="text-align:center; font-size:10px; color:#aaa; margin-top:15px;">Нажимай на карточки, чтобы найти им пару!</div>
         </div>
 
+        <div id="aim-ui" style="display: none;">
+            <div class="game-stats">
+                <div>СЧЕТ: <span id="aim-score" style="color: #fff;">0</span></div>
+                <div>ВРЕМЯ: <span id="aim-time" style="color: #fff;">20</span>с</div>
+            </div>
+            <div class="minigame-arena" id="arena" onclick="missAim()">
+                <div class="target" id="target" onclick="hitAim(event)"></div>
+            </div>
+        </div>
+
+        <div id="plane-ui" style="display: none;">
+            <div class="game-stats" style="color: #00aaff; border-color: rgba(0, 170, 255, 0.3);">
+                <div>ВЫЖИВАНИЕ</div>
+                <div>ВРЕМЯ: <span id="plane-time" style="color: #fff;">60</span>с</div>
+            </div>
+            <div class="plane-arena" id="plane-arena">
+                <div id="plane">✈️</div>
+            </div>
+            <div style="text-align:center; font-size:10px; color:#aaa; margin-top:10px;">Ведите пальцем по экрану, чтобы уклоняться от красных ракет!</div>
+        </div>
+
+        <div id="wheel-ui" style="display: none; text-align: center;">
+            <div style="font-size: 70px; margin: 30px 0; text-shadow: 0 0 20px rgba(255, 200, 0, 0.4); animation: pulseGlow 2s infinite;">🎰</div>
+            <div style="font-size: 24px; font-weight: 900; color: #fff; font-family: 'Orbitron'; margin-bottom: 10px;" id="wheel-result">Крути барабан!</div>
+            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 30px;">Может выпасть: 15 Gold, 100 Gold, 50 XP или ничего.</div>
+            <button class="btn btn-gold" id="wheel-btn" onclick="spinWheel()">КРУТИТЬ (Бесплатно)</button>
+        </div>
+
+        <div id="parkour-ui" style="display: none;">
+            <div class="game-stats" style="color: #ff3333; border-color: rgba(255, 51, 51, 0.3);">
+                <div>ХАРДКОР</div>
+                <div>ВРЕМЯ: <span id="parkour-time" style="color: #fff;">30</span>с</div>
+            </div>
+            <div class="plane-arena" id="parkour-arena" style="height: 200px; border-color: #ff3333; background: #0a0505; position: relative;" onclick="parkourJump()">
+                <div id="pk-player" style="position: absolute; bottom: 0; left: 30px; width: 30px; height: 30px; font-size: 24px; transition: bottom 0.3s cubic-bezier(0.1, 0.9, 0.2, 1); z-index: 10;">🏃</div>
+                <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 2px; background: #ff3333; box-shadow: 0 0 10px #ff3333;"></div>
+            </div>
+            <div style="text-align:center; font-size:10px; color:#aaa; margin-top:10px;">Нажимай на поле, чтобы перепрыгивать красные блоки!</div>
+        </div>
+    </div>
+
     <div id="p-xpshop" class="page">
         <div class="section-title">Обмен XP на Голду</div>
         <div class="card">
@@ -1081,7 +1123,7 @@
                     }
 
                     const statusColor = cIsOpen === '1' ? 'var(--success)' : 'var(--danger)';
-                    const statusText = cIsOpen === '1' ? 'Открыт' : 'Закрыт';
+                    const statusText = cIsOpen === '1' ? 'Набор Открыт' : 'Набор Закрыт';
                     let avaHtml = cAvatar && cAvatar !== 'none' ? `<img src="${cAvatar}" style="width: 50px; height: 50px; border-radius: 14px; object-fit: cover; border: 1px solid rgba(255,200,0,0.3); box-shadow: 0 0 15px rgba(255,200,0,0.1);">` : `<div style="width: 50px; height: 50px; border-radius: 14px; background: rgba(255,200,0,0.1); border: 1px solid rgba(255,200,0,0.3); display:flex; align-items:center; justify-content:center; font-size: 24px; text-shadow: 0 0 10px var(--gold);">🛡️</div>`;
                     
                     let tgBtnHtml = "";
