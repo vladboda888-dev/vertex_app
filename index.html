@@ -103,6 +103,7 @@
             background: var(--bg-surface); border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 20px; overflow: hidden; margin-bottom: 24px;
             box-shadow: 0 12px 35px rgba(0,0,0,0.7);
+            transform: translateZ(0);
         }
         .news-img-wrap { position: relative; width: 100%; height: 230px; }
         .news-img-wrap img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
@@ -284,12 +285,38 @@
         .tag-svc { background: rgba(230, 0, 0, 0.1); color: var(--accent); border: 1px solid rgba(230, 0, 0, 0.2); }
         .tag-mode { background: rgba(255, 255, 255, 0.05); color: #ccc; border: 1px solid rgba(255, 255, 255, 0.1); }
 
-        /* Игры */
-        .game-menu-card { background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 20px; margin-bottom: 15px; text-align: center; cursor: pointer; transition: 0.2s; }
-        .game-menu-card:active { transform: scale(0.97); }
+        /* === КОСМИЧЕСКИЕ МИНИ-ИГРЫ === */
+        .game-menu-grid { display: grid; grid-template-columns: 1fr; gap: 14px; margin-bottom: 15px; }
+        .game-card-pro {
+            background: linear-gradient(145deg, rgba(20,20,25,0.9), rgba(10,10,15,0.95));
+            border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; padding: 18px;
+            display: flex; align-items: center; gap: 16px; position: relative; overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4); transition: 0.3s cubic-bezier(0.25,0.8,0.25,1); cursor: pointer;
+        }
+        .game-card-pro::before {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, var(--gc-color) 0%, transparent 50%);
+            opacity: 0.08; pointer-events: none; transition: 0.3s;
+        }
+        .game-card-pro:active { transform: scale(0.96); box-shadow: 0 4px 15px rgba(0,0,0,0.6); }
+        .game-card-pro:active::before { opacity: 0.15; }
+        .gc-icon { min-width: 55px; height: 55px; border-radius: 14px; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; font-size: 26px; border: 1px solid rgba(255,255,255,0.05); box-shadow: inset 0 0 15px var(--gc-color-dim); }
+
         .plane-arena { width: 100%; height: 320px; background: #07070a; border: 2px solid #00aaff; border-radius: var(--radius-md); position: relative; overflow: hidden; touch-action: none; box-shadow: inset 0 0 20px rgba(0, 170, 255, 0.1); }
         #plane { position: absolute; width: 30px; height: 30px; font-size: 24px; display: flex; justify-content: center; align-items: center; left: 50%; top: 80%; transform: translate(-50%, -50%); z-index: 10; text-shadow: 0 0 10px #00aaff; }
         .bullet { position: absolute; width: 6px; height: 18px; background: #ff0000; border-radius: 10px; box-shadow: 0 0 10px #ff0000; }
+        .minigame-arena { width: 100%; height: 250px; background: var(--bg-base); border: 2px solid var(--border-color); border-radius: var(--radius-md); position: relative; overflow: hidden; margin-top: 15px; display: none; }
+        .target { position: absolute; width: 45px; height: 45px; background: radial-gradient(circle, #fff 20%, var(--accent) 30%, var(--accent) 100%); border-radius: 50%; box-shadow: 0 0 15px var(--accent-glow); cursor: crosshair; transform: scale(0); transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .target.show { transform: scale(1); }
+        .game-stats { display: flex; justify-content: space-between; font-size: 12px; font-family: 'Orbitron'; color: var(--accent); padding: 10px; background: var(--bg-surface); border-bottom: 1px solid var(--border-color); }
+
+        /* ИГРА МЕМОРИ (НАЙДИ ПАРУ) */
+        .memory-board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 15px; perspective: 1000px; }
+        .memory-card { aspect-ratio: 1; position: relative; transform-style: preserve-3d; transition: transform 0.5s cubic-bezier(0.4, 0.0, 0.2, 1); cursor: pointer; }
+        .memory-card.flipped { transform: rotateY(180deg); }
+        .memory-card.matched { visibility: hidden; opacity: 0; transition: 0.3s 0.4s; }
+        .m-cover { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: linear-gradient(135deg, rgba(150,0,255,0.1), rgba(50,0,100,0.5)); border: 1px solid rgba(150,0,255,0.3); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 5px 15px rgba(150,0,255,0.1); transform: rotateY(0deg); }
+        .m-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: rgba(15,15,20,0.9); border: 2px solid #b000ff; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 28px; transform: rotateY(180deg); box-shadow: inset 0 0 15px rgba(150,0,255,0.3); }
         
         /* Исправление шариков аима */
         .target { position: absolute; width: 45px; height: 45px; background: radial-gradient(circle, #fff 20%, var(--accent) 30%, var(--accent) 100%); border-radius: 50%; box-shadow: 0 0 15px var(--accent-glow); cursor: crosshair; transform: scale(0); transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
@@ -647,62 +674,56 @@
     <div id="p-game" class="page">
         <div class="section-title">Игровой центр</div>
         
-        <div id="game-menu">
-            <div class="game-menu-card" onclick="startAimGame()">
-                <div style="font-size: 16px; font-weight: 800; color: var(--accent); margin-bottom: 5px;">🎯 Тренировка Аима</div>
-                <div style="font-size: 11px; color: var(--text-secondary);">Набери 15 очков за 20 секунд.<br><span style="color:var(--success); font-weight:800;">Награда: 25 XP</span></div>
+        <div id="game-menu" class="game-menu-grid">
+            <div class="game-card-pro" style="--gc-color: rgba(230,0,0,0.8); --gc-color-dim: rgba(230,0,0,0.3); border-left: 3px solid var(--accent);" onclick="startAimGame()">
+                <div class="gc-icon">🎯</div>
+                <div>
+                    <div style="font-size: 15px; font-weight: 900; color: #fff; margin-bottom: 2px;">Тренировка Аима</div>
+                    <div style="font-size: 10px; color: var(--text-secondary); line-height: 1.3;">Набери 15 очков за 20 сек.<br><span style="color:var(--success); font-weight:800;">Награда: 25 XP</span></div>
+                </div>
             </div>
-            <div class="game-menu-card" style="border-color: rgba(0, 170, 255, 0.3);" onclick="startPlaneGame()">
-                <div style="font-size: 16px; font-weight: 800; color: #00aaff; margin-bottom: 5px;">✈️ Выживание Пилота</div>
-                <div style="font-size: 11px; color: var(--text-secondary);">Уклоняйся от ракет ровно 60 секунд. Хардкор.<br><span style="color:var(--success); font-weight:800;">Награда: 35 XP</span></div>
+
+            <div class="game-card-pro" style="--gc-color: rgba(0,170,255,0.8); --gc-color-dim: rgba(0,170,255,0.3); border-left: 3px solid #00aaff;" onclick="startPlaneGame()">
+                <div class="gc-icon">✈️</div>
+                <div>
+                    <div style="font-size: 15px; font-weight: 900; color: #fff; margin-bottom: 2px;">Выживание Пилота</div>
+                    <div style="font-size: 10px; color: var(--text-secondary); line-height: 1.3;">Уклоняйся от ракет ровно 60 сек.<br><span style="color:var(--success); font-weight:800;">Награда: 35 XP</span></div>
+                </div>
             </div>
-            <div class="game-menu-card" style="border-color: rgba(255, 200, 0, 0.3);" onclick="startWheel()">
-                <div style="font-size: 16px; font-weight: 800; color: var(--gold); margin-bottom: 5px;">🎰 Колесо Фортуны</div>
-                <div style="font-size: 11px; color: var(--text-secondary);">Крути рулетку 1 раз в день.<br><span style="color:var(--success); font-weight:800;">Награда: До 100 Gold</span></div>
+
+            <div class="game-card-pro" style="--gc-color: rgba(150,0,255,0.8); --gc-color-dim: rgba(150,0,255,0.3); border-left: 3px solid #b000ff;" onclick="startMemoryGame()">
+                <div class="gc-icon">🧩</div>
+                <div>
+                    <div style="font-size: 15px; font-weight: 900; color: #fff; margin-bottom: 2px;">Memory (Найди пару)</div>
+                    <div style="font-size: 10px; color: var(--text-secondary); line-height: 1.3;">Найди 8 одинаковых пар за 40 сек.<br><span style="color:var(--success); font-weight:800;">Награда: 50 XP</span></div>
+                </div>
             </div>
-            <div class="game-menu-card" style="border-color: rgba(255, 51, 51, 0.3);" onclick="startParkourGame()">
-                <div style="font-size: 16px; font-weight: 800; color: #ff3333; margin-bottom: 5px;">🏃 Паркур (Хардкор)</div>
-                <div style="font-size: 11px; color: var(--text-secondary);">Перепрыгивай препятствия 30 секунд.<br><span style="color:var(--success); font-weight:800;">Награда: 75 XP</span></div>
+
+            <div class="game-card-pro" style="--gc-color: rgba(255,200,0,0.8); --gc-color-dim: rgba(255,200,0,0.3); border-left: 3px solid var(--gold);" onclick="startWheel()">
+                <div class="gc-icon">🎰</div>
+                <div>
+                    <div style="font-size: 15px; font-weight: 900; color: #fff; margin-bottom: 2px;">Колесо Фортуны</div>
+                    <div style="font-size: 10px; color: var(--text-secondary); line-height: 1.3;">Крути рулетку 1 раз в день.<br><span style="color:var(--success); font-weight:800;">Награда: До 100 Gold</span></div>
+                </div>
+            </div>
+
+            <div class="game-card-pro" style="--gc-color: rgba(255,51,51,0.8); --gc-color-dim: rgba(255,51,51,0.3); border-left: 3px solid #ff3333;" onclick="startParkourGame()">
+                <div class="gc-icon">🏃</div>
+                <div>
+                    <div style="font-size: 15px; font-weight: 900; color: #fff; margin-bottom: 2px;">Паркур (Хардкор)</div>
+                    <div style="font-size: 10px; color: var(--text-secondary); line-height: 1.3;">Прыгай 30 секунд. Сложно.<br><span style="color:var(--success); font-weight:800;">Награда: 75 XP</span></div>
+                </div>
             </div>
         </div>
 
-         <div id="wheel-ui" style="display: none; text-align: center; padding: 20px;">
-            <div class="section-title" style="color: var(--gold);">Колесо Фортуны</div>
-            <div id="wheel-result" style="font-size: 24px; font-weight: 900; color: #fff; margin: 40px 0; height: 30px; font-family: 'Orbitron';">🎰 Нажми старт 🎰</div>
-            <button class="btn" style="background: var(--gold); color: #000; font-weight: 900;" id="wheel-btn" onclick="spinWheel()">КРУТИТЬ РУЛЕТКУ</button>
+        <div id="memory-ui" style="display: none;">
+            <div class="game-stats" style="color: #b000ff; border-color: rgba(150, 0, 255, 0.3);">
+                <div>НАЙДЕНО: <span id="memory-score" style="color: #fff; font-weight:900;">0</span>/8</div>
+                <div>ВРЕМЯ: <span id="memory-time" style="color: #fff; font-weight:900;">40</span>с</div>
+            </div>
+            <div id="memory-board" class="memory-board"></div>
+            <div style="text-align:center; font-size:10px; color:#aaa; margin-top:15px;">Нажимай на карточки, чтобы найти им пару!</div>
         </div>
-
-        <div id="parkour-ui" style="display: none;">
-            <div class="game-stats" style="color: #ff3333; border-color: rgba(255, 51, 51, 0.3);">
-                <div>ВЫЖИВАНИЕ</div>
-                <div>ОСТАЛОСЬ: <span id="parkour-time" style="color: #fff; font-weight:900;">30</span>с</div>
-            </div>
-            <div class="plane-arena" id="parkour-arena" style="border-color: #ff3333; box-shadow: inset 0 0 20px rgba(255, 51, 51, 0.1);" onclick="parkourJump()">
-                <div id="pk-player" style="position: absolute; bottom: 0; left: 20px; width: 30px; height: 30px; background: #00aaff; border-radius: 4px; box-shadow: 0 0 10px #00aaff; transition: bottom 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);"></div>
-            </div>
-            <div style="text-align:center; font-size:10px; color:#aaa; margin-top:10px;">Нажимай на арену, чтобы прыгать!</div>
-        </div>
-        
-        <div id="aim-ui" style="display: none;">
-            <div class="game-stats">
-                <div>СЧЕТ: <span id="aim-score" style="color: #fff;">0</span>/15</div>
-                <div>ВРЕМЯ: <span id="aim-time" style="color: #fff;">20</span>с</div>
-            </div>
-            <div class="minigame-arena" id="arena" style="display:block;" onclick="missAim(event)">
-                <div class="target" id="target" onclick="hitAim(event)"></div>
-            </div>
-        </div>
-
-        <div id="plane-ui" style="display: none;">
-            <div class="game-stats" style="color: #00aaff; border-color: rgba(0, 170, 255, 0.3);">
-                <div>ВЫЖИВАНИЕ</div>
-                <div>ОСТАЛОСЬ: <span id="plane-time" style="color: #fff; font-weight:900;">60</span>с</div>
-            </div>
-            <div class="plane-arena" id="plane-arena">
-                <div id="plane">✈️</div>
-            </div>
-        </div>
-    </div>
 
     <div id="p-xpshop" class="page">
         <div class="section-title">Обмен XP на Голду</div>
@@ -887,6 +908,7 @@
         let canWheel = "false";
         let canParkour = "false";
         let globalClanPosts = [];
+        let canMemory = "false";
         
         let gameScore = 0;
         let gameTime = 20;
@@ -927,6 +949,7 @@
             canPlane = params.get('plane') || "false";
             canWheel = params.get('wheel') || "false";
             canParkour = params.get('pk') || "false";
+            canMemory = params.get('mem') || "false";
 
             const role = params.get('role');
             userId = params.get('id') || '000000';
@@ -1844,6 +1867,118 @@
             document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el);
             showToast("Ссылка скопирована!", "success");
         }
+
+        // --- ДВИЖОК ИГРЫ MEMORY ---
+        let firstCard = null, secondCard = null;
+        let lockBoard = false;
+        let matchedPairsCount = 0;
+        const totalPairs = 8;
+        const memoryEmojis = ['🍎', '🍌', '🍉', '🍇', '🍓', '🍒', '🥝', '🍍'];
+
+        function startMemoryGame() {
+            if(canMemory === "false") return showToast("Доступно 1 раз в день!", "error");
+            document.getElementById('game-menu').style.display = 'none';
+            document.getElementById('memory-ui').style.display = 'block';
+
+            matchedPairsCount = 0;
+            document.getElementById('memory-score').innerText = matchedPairsCount;
+            gameTime = 40;
+            document.getElementById('memory-time').innerText = gameTime;
+            
+            isGameActive = true;
+            lockBoard = false;
+            firstCard = null;
+            secondCard = null;
+
+            renderMemoryBoard();
+
+            gameTimerId = setInterval(() => {
+                gameTime--;
+                document.getElementById('memory-time').innerText = gameTime;
+                if(gameTime <= 0) endMemoryGame(false);
+            }, 1000);
+        }
+
+        function renderMemoryBoard() {
+            const board = document.getElementById('memory-board');
+            board.innerHTML = '';
+            
+            // Создаем пары и перемешиваем
+            let cards = [...memoryEmojis, ...memoryEmojis];
+            cards.sort(() => Math.random() - 0.5);
+
+            cards.forEach(emoji => {
+                const card = document.createElement('div');
+                card.className = 'memory-card';
+                card.dataset.emoji = emoji;
+                card.innerHTML = `<div class="m-cover">❓</div><div class="m-face">${emoji}</div>`;
+                card.onclick = () => flipMemoryCard(card);
+                board.appendChild(card);
+            });
+        }
+
+        function flipMemoryCard(card) {
+            if(lockBoard || !isGameActive) return;
+            if(card === firstCard || card.classList.contains('flipped')) return;
+
+            card.classList.add('flipped');
+            tg.HapticFeedback.impactOccurred('light');
+
+            if(!firstCard) {
+                firstCard = card;
+                return;
+            }
+
+            secondCard = card;
+            checkMemoryMatch();
+        }
+
+        function checkMemoryMatch() {
+            let isMatch = firstCard.dataset.emoji === secondCard.dataset.emoji;
+            if(isMatch) {
+                matchedPairsCount++;
+                document.getElementById('memory-score').innerText = matchedPairsCount;
+                firstCard.classList.add('matched');
+                secondCard.classList.add('matched');
+                tg.HapticFeedback.notificationOccurred('success');
+                resetMemoryBoard();
+
+                if(matchedPairsCount === totalPairs) {
+                    endMemoryGame(true);
+                }
+            } else {
+                lockBoard = true;
+                setTimeout(() => {
+                    firstCard.classList.remove('flipped');
+                    secondCard.classList.remove('flipped');
+                    tg.HapticFeedback.impactOccurred('rigid');
+                    resetMemoryBoard();
+                }, 800);
+            }
+        }
+
+        function resetMemoryBoard() {
+            [firstCard, secondCard, lockBoard] = [null, null, false];
+        }
+
+        function endMemoryGame(win) {
+            isGameActive = false;
+            clearInterval(gameTimerId);
+            document.getElementById('memory-ui').style.display = 'none';
+            document.getElementById('game-menu').style.display = 'block';
+            canMemory = "false";
+
+            if(win) {
+                tg.showAlert("Память пройдена! Вы гений.", () => {
+                    tg.sendData(JSON.stringify({ action: "minigame_win", game: "memory" }));
+                });
+            } else {
+                tg.HapticFeedback.notificationOccurred('error');
+                tg.showAlert(`Время вышло! Найдено пар: ${matchedPairsCount} из ${totalPairs}.`, () => {
+                    tg.sendData(JSON.stringify({ action: "minigame_lose", game: "memory" }));
+                });
+            }
+                                                    }
     </script>
 </body>
 </html>
