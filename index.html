@@ -624,11 +624,12 @@
                     <li>Уникальная роль владельца</li>
                 </ul>
             </div>
-            <button class="btn btn-gold" style="padding: 12px; font-size: 12px;" onclick="tg.openTelegramLink('https://t.me/@Zentrox_1')">Купить клан у Администратора</button>
+            <button class="btn btn-gold" style="padding: 12px; font-size: 12px;" onclick="tg.openTelegramLink('https://t.me/Zentrox_1')">Купить клан у Администратора</button>
         </div>
 
         <div id="my-clan-admin" class="card" style="display:none; border-color: var(--gold);">
             <div style="color: var(--gold); font-weight: 800; font-size: 12px; margin-bottom: 10px;">👑 Управление кланом</div>
+            <input type="text" id="clan-ava-input" placeholder="Ссылка на аватарку (https://...)">
             <input type="text" id="clan-desc-input" placeholder="Описание клана">
             <select id="clan-status">
                 <option value="1">Набор открыт</option>
@@ -636,9 +637,11 @@
             </select>
             <button class="btn btn-gold" onclick="saveClan()">Сохранить настройки</button>
             
-            <div style="margin-top: 15px;">
-                <input type="text" id="clan-post-input" placeholder="Новость для клана">
-                <button class="btn btn-outline" onclick="postClanNews()">Опубликовать</button>
+            <div style="margin-top: 25px; border-top: 1px dashed var(--border-color); padding-top: 15px;">
+                <div style="color: #00aaff; font-weight: 800; font-size: 12px; margin-bottom: 10px;">📰 Создать пост</div>
+                <input type="text" id="clan-banners-input" placeholder="Ссылки на фото (через запятую)">
+                <input type="text" id="clan-post-input" placeholder="Текст новости...">
+                <button class="btn btn-outline" style="border-color: #00aaff; color: #00aaff;" onclick="postClanNews()">Опубликовать</button>
             </div>
         </div>
         
@@ -797,7 +800,8 @@
             if (cPostsData) {
                 globalClanPosts = cPostsData.split('|').map(p => {
                     const parts = p.split('*');
-                    return { clanId: parts[0], text: parts[1], time: parts[2] };
+                    // Добавили banners
+                    return { clanId: parts[0], text: parts[1], time: parts[2], banners: parts[3] || 'none' };
                 }).filter(p => p.clanId);
             }
 
@@ -813,31 +817,39 @@
 
                 clans.forEach(c => {
                     if (!c) return;
-                    const [cId, cName, cOwnerId, cDesc, cIsOpen, cOwnerName] = c.split('*');
+                    // Вытаскиваем аватарку
+                    const [cId, cName, cOwnerId, cDesc, cIsOpen, cOwnerName, cAvatar] = c.split('*');
 
                     if (cOwnerId === userId.toString()) {
                         hasMyClan = true;
                         const descInput = document.getElementById('clan-desc-input');
                         const statusSelect = document.getElementById('clan-status');
+                        const avaInput = document.getElementById('clan-ava-input');
                         if(descInput) descInput.value = cDesc;
                         if(statusSelect) statusSelect.value = cIsOpen;
+                        if(avaInput && cAvatar !== 'none') avaInput.value = cAvatar;
                     }
 
                     const statusColor = cIsOpen === '1' ? 'var(--success)' : 'var(--danger)';
-                    const statusText = cIsOpen === '1' ? 'Набор открыт' : 'Набор закрыт';
+                    const statusText = cIsOpen === '1' ? 'Открыт' : 'Закрыт';
+                    
+                    // Если есть аватарка, ставим её, если нет - базовый щит
+                    let avaHtml = cAvatar && cAvatar !== 'none' ? `<img src="${cAvatar}" style="width: 45px; height: 45px; border-radius: 10px; object-fit: cover; border: 1px solid var(--gold);">` : `<div style="font-size: 28px; text-shadow: 0 0 10px var(--gold);">🛡️</div>`;
 
-                    // ДОБАВИЛИ КЛАСС card-clickable и функцию onclick
                     clansBox.innerHTML += `
                         <div class="card card-clickable" style="border-left: 4px solid var(--gold);" onclick="openClanModal('${cId}', '${cName}')">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                                <div style="font-size: 16px; font-weight: 900; font-family: 'Orbitron'; color: var(--gold);">${cName}</div>
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+                                <div style="display:flex; gap: 12px; align-items:center;">
+                                    ${avaHtml}
+                                    <div>
+                                        <div style="font-size: 16px; font-weight: 900; font-family: 'Orbitron'; color: var(--gold);">${cName}</div>
+                                        <div style="font-size: 10px; color: var(--text-secondary);">👑 @${cOwnerName !== 'null' ? cOwnerName : 'Скрыт'}</div>
+                                    </div>
+                                </div>
                                 <div style="font-size: 10px; font-weight: 800; color: ${statusColor};">${statusText}</div>
                             </div>
                             <div style="font-size: 11px; color: #ccc; margin-bottom: 8px;">${cDesc}</div>
-                            <div style="font-size: 10px; color: var(--text-secondary); display:flex; justify-content:space-between;">
-                                <span>👑 Владелец: @${cOwnerName !== 'null' ? cOwnerName : 'Скрыт'}</span>
-                                <span style="color:#00aaff;">📰 Открыть новости</span>
-                            </div>
+                            <div style="font-size: 10px; color: #00aaff; text-align:right;">📰 Открыть новости</div>
                         </div>`;
                 });
 
@@ -1393,13 +1405,6 @@
             });
         }
 
-        function saveClan() {
-            const desc = document.getElementById('clan-desc-input').value;
-            const isOpen = document.getElementById('clan-status').value;
-            tg.sendData(JSON.stringify({ action: "edit_clan", desc: desc, is_open: isOpen }));
-            showToast("Настройки клана сохранены!");
-        }
-
         function openClanModal(cId, cName) {
             document.getElementById('modal-clan-title').innerText = cName;
             const postsBox = document.getElementById('modal-clan-posts');
@@ -1410,10 +1415,24 @@
 
             if (clanPosts.length > 0) {
                 clanPosts.forEach(p => {
+                    let bannersHtml = "";
+                    if(p.banners && p.banners !== 'none') {
+                        // Режем строку по запятой и чистим пробелы
+                        const urls = p.banners.split(',').map(u => u.trim()).filter(u => u);
+                        if(urls.length > 0) {
+                            bannersHtml = `<div style="display:flex; gap:8px; overflow-x:auto; margin-bottom:10px; padding-bottom:5px;">`;
+                            urls.forEach(url => {
+                                bannersHtml += `<img src="${url}" style="height: 120px; border-radius: 8px; border: 1px solid var(--border-color); object-fit: cover; flex-shrink: 0;">`;
+                            });
+                            bannersHtml += `</div>`;
+                        }
+                    }
+
                     postsBox.innerHTML += `
                         <div class="card" style="border-left: 3px solid #00aaff; margin-bottom: 12px; padding: 15px; background: rgba(0, 170, 255, 0.03);">
-                            <div style="font-size: 10px; color: #777; margin-bottom: 8px; font-weight: 800;">🕒 Опубликовано: ${p.time}</div>
-                            <div style="font-size: 13px; color: #eee; line-height: 1.5;">${p.text}</div>
+                            <div style="font-size: 10px; color: #777; margin-bottom: 10px; font-weight: 800;">🕒 ${p.time}</div>
+                            ${bannersHtml}
+                            <div style="font-size: 13px; color: #eee; line-height: 1.5; white-space: pre-wrap;">${p.text}</div>
                         </div>`;
                 });
             } else {
@@ -1433,10 +1452,19 @@
             tg.HapticFeedback.impactOccurred('light');
         }
         
+        function saveClan() {
+            const desc = document.getElementById('clan-desc-input').value;
+            const isOpen = document.getElementById('clan-status').value;
+            const ava = document.getElementById('clan-ava-input').value || 'none';
+            tg.sendData(JSON.stringify({ action: "edit_clan", desc: desc, is_open: isOpen, ava: ava }));
+            showToast("Настройки клана сохранены!");
+        }
+
         function postClanNews() {
             const text = document.getElementById('clan-post-input').value;
-            if(!text) return;
-            tg.sendData(JSON.stringify({ action: "post_clan", text: text }));
+            const banners = document.getElementById('clan-banners-input').value || 'none';
+            if(!text && banners === 'none') return; // Если все пустое - игнорим
+            tg.sendData(JSON.stringify({ action: "post_clan", text: text, banners: banners }));
             showToast("Новость опубликована!");
         }
         
