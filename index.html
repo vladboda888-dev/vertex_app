@@ -51,6 +51,55 @@
             pointer-events: none;
         }
 
+        /* === ПРЕМИУМ КАРТОЧКИ КЛАНОВ === */
+        .clan-card-premium {
+            background: linear-gradient(145deg, rgba(25, 25, 30, 0.95) 0%, rgba(10, 10, 15, 0.95) 100%);
+            border: 1px solid rgba(255, 200, 0, 0.15);
+            border-radius: 18px; padding: 18px; margin-bottom: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.05);
+            position: relative; overflow: hidden; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .clan-card-premium::before {
+            content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 200, 0, 0.05), transparent);
+            transform: skewX(-25deg); animation: shine 5s infinite; pointer-events: none;
+        }
+        @keyframes shine { 0% { left: -100%; } 20% { left: 200%; } 100% { left: 200%; } }
+        .clan-card-premium:active { transform: scale(0.97); border-color: rgba(255, 200, 0, 0.4); }
+
+        /* Кнопка ТГ в клане */
+        .tg-channel-btn {
+            background: rgba(0, 136, 204, 0.1); border: 1px solid rgba(0, 136, 204, 0.3); color: #00aaff;
+            padding: 6px 12px; border-radius: 10px; font-size: 10px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px;
+            box-shadow: 0 0 10px rgba(0, 136, 204, 0.1); transition: 0.2s;
+        }
+        .tg-channel-btn:active { background: rgba(0, 136, 204, 0.3); transform: scale(0.95); }
+
+        /* === ПРЕМИУМ НОВОСТИ === */
+        .news-card-pro {
+            background: var(--bg-surface); border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px; overflow: hidden; margin-bottom: 24px;
+            box-shadow: 0 12px 35px rgba(0,0,0,0.7);
+        }
+        .news-img-wrap { position: relative; width: 100%; height: 180px; }
+        .news-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+        .news-gradient {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 120px;
+            background: linear-gradient(to top, var(--bg-surface) 0%, transparent 100%);
+        }
+        .news-pro-header {
+            position: absolute; bottom: 15px; left: 15px; right: 15px; display: flex; align-items: center; gap: 12px;
+        }
+        .news-pro-ava { width: 40px; height: 40px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.1); object-fit: cover; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        .news-pro-title { font-size: 15px; font-weight: 900; color: #fff; text-shadow: 0 2px 5px rgba(0,0,0,0.8); }
+
+        /* Посты внутри клана */
+        .clan-post-pro {
+            background: rgba(15, 15, 20, 0.6); border: 1px solid rgba(0, 170, 255, 0.15); border-left: 4px solid #00aaff;
+            border-radius: 14px; padding: 16px; margin-bottom: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3); backdrop-filter: blur(10px);
+        }
+        
         /* Анимации */
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes pulseGlow { 0% { box-shadow: 0 0 5px var(--accent-glow); } 50% { box-shadow: 0 0 20px var(--accent-glow); } 100% { box-shadow: 0 0 5px var(--accent-glow); } }
@@ -630,6 +679,7 @@
         <div id="my-clan-admin" class="card" style="display:none; border-color: var(--gold);">
             <div style="color: var(--gold); font-weight: 800; font-size: 12px; margin-bottom: 10px;">👑 Управление кланом</div>
             <input type="text" id="clan-ava-input" placeholder="Ссылка на аватарку (https://...)">
+            <input type="text" id="clan-tg-input" placeholder="Ссылка на Telegram канал (https://t.me/...)">
             <input type="text" id="clan-desc-input" placeholder="Описание клана">
             <select id="clan-status">
                 <option value="1">Набор открыт</option>
@@ -804,7 +854,7 @@
                 }).filter(p => p.clanId);
             }
 
-            // Парсинг кланов
+            // Парсинг кланов (ПРЕМИУМ ДИЗАЙН)
             const clansData = params.get('clans');
             const clansBox = document.getElementById('clans-list');
             const myClanAdmin = document.getElementById('my-clan-admin');
@@ -816,45 +866,51 @@
 
                 clans.forEach(c => {
                     if (!c) return;
-                    // Вытаскиваем аватарку
-                    const [cId, cName, cOwnerId, cDesc, cIsOpen, cOwnerName, cAvatar] = c.split('*');
+                    const [cId, cName, cOwnerId, cDesc, cIsOpen, cOwnerName, cAvatar, cTgLink] = c.split('*');
 
                     if (cOwnerId === userId.toString()) {
                         hasMyClan = true;
                         const descInput = document.getElementById('clan-desc-input');
                         const statusSelect = document.getElementById('clan-status');
                         const avaInput = document.getElementById('clan-ava-input');
+                        const tgInput = document.getElementById('clan-tg-input');
                         if(descInput) descInput.value = cDesc;
                         if(statusSelect) statusSelect.value = cIsOpen;
                         if(avaInput && cAvatar !== 'none') avaInput.value = cAvatar;
+                        if(tgInput && cTgLink !== 'none') tgInput.value = cTgLink;
                     }
 
                     const statusColor = cIsOpen === '1' ? 'var(--success)' : 'var(--danger)';
-                    const statusText = cIsOpen === '1' ? 'Набор Открыт' : 'Набор Закрыт';
+                    const statusText = cIsOpen === '1' ? 'Открыт' : 'Закрыт';
+                    let avaHtml = cAvatar && cAvatar !== 'none' ? `<img src="${cAvatar}" style="width: 50px; height: 50px; border-radius: 14px; object-fit: cover; border: 1px solid rgba(255,200,0,0.3); box-shadow: 0 0 15px rgba(255,200,0,0.1);">` : `<div style="width: 50px; height: 50px; border-radius: 14px; background: rgba(255,200,0,0.1); border: 1px solid rgba(255,200,0,0.3); display:flex; align-items:center; justify-content:center; font-size: 24px; text-shadow: 0 0 10px var(--gold);">🛡️</div>`;
                     
-                    // Если есть аватарка, ставим её, если нет - базовый щит
-                    let avaHtml = cAvatar && cAvatar !== 'none' ? `<img src="${cAvatar}" style="width: 45px; height: 45px; border-radius: 10px; object-fit: cover; border: 1px solid var(--gold);">` : `<div style="font-size: 28px; text-shadow: 0 0 10px var(--gold);">🛡️</div>`;
+                    let tgBtnHtml = "";
+                    if (cTgLink && cTgLink !== 'none' && cTgLink.includes('t.me')) {
+                        // event.stopPropagation() нужен чтобы при клике на ТГ не открывались новости
+                        tgBtnHtml = `<div class="tg-channel-btn" onclick="event.stopPropagation(); tg.openTelegramLink('${cTgLink}')">✈️ Канал</div>`;
+                    }
 
                     clansBox.innerHTML += `
-                        <div class="card card-clickable" style="border-left: 4px solid var(--gold);" onclick="openClanModal('${cId}', '${cName}', '${cOwnerId}')">
-                            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
-                                <div style="display:flex; gap: 12px; align-items:center;">
+                        <div class="clan-card-premium" onclick="openClanModal('${cId}', '${cName}', '${cOwnerId}')">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+                                <div style="display:flex; gap: 14px; align-items:center;">
                                     ${avaHtml}
                                     <div>
-                                        <div style="font-size: 16px; font-weight: 900; font-family: 'Orbitron'; color: var(--gold);">${cName}</div>
-                                        <div style="font-size: 10px; color: var(--text-secondary);">👑 @${cOwnerName !== 'null' ? cOwnerName : 'Скрыт'}</div>
+                                        <div style="font-size: 18px; font-weight: 900; font-family: 'Orbitron'; color: var(--gold); text-shadow: 0 0 10px rgba(255,200,0,0.2); margin-bottom: 2px;">${cName}</div>
+                                        <div style="font-size: 11px; color: var(--text-secondary); font-weight: 600;">👑 Владелец: @${cOwnerName !== 'null' ? cOwnerName : 'Скрыт'}</div>
                                     </div>
                                 </div>
-                                <div style="font-size: 10px; font-weight: 800; color: ${statusColor};">${statusText}</div>
+                                <div style="font-size: 10px; font-weight: 900; color: ${statusColor}; background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 6px;">${statusText}</div>
                             </div>
-                            <div style="font-size: 11px; color: #ccc; margin-bottom: 8px;">${cDesc}</div>
-                            <div style="font-size: 10px; color: #00aaff; text-align:right;">📰 Открыть новости</div>
+                            <div style="font-size: 12px; color: #ccc; margin-bottom: 15px; line-height: 1.4;">${cDesc}</div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 12px;">
+                                ${tgBtnHtml}
+                                <div style="font-size: 11px; color: #00aaff; font-weight: 800; display:flex; align-items:center; gap: 4px; ${!tgBtnHtml ? 'margin-left: auto;' : ''}">📰 Новости клана <span style="font-size: 14px;">→</span></div>
+                            </div>
                         </div>`;
                 });
 
-                if (hasMyClan && myClanAdmin) {
-                    myClanAdmin.style.display = 'block';
-                }
+                if (hasMyClan && myClanAdmin) { myClanAdmin.style.display = 'block'; }
             } else if (clansBox) {
                 clansBox.innerHTML = "<div style='text-align:center; color:#777; padding:20px;'>Кланов пока нет</div>";
             }
@@ -938,16 +994,19 @@
                 newsItems.forEach(n => {
                     if(!n) return;
                     const [ava, banner, title, text, link] = n.split('*');
-                    let bannerHTML = banner !== 'none' ? `<img src="${banner}" class="news-banner">` : '';
+                    let bannerHTML = banner !== 'none' ? `<img src="${banner}">` : `<div style="width:100%; height:100%; background:linear-gradient(45deg, #1a1a20, #0f0f13);"></div>`;
                     newsBox.innerHTML += `
-                        <div class="news-card">
-                            <div class="news-header">
-                                <img src="${ava}" class="news-ava">
-                                <div class="news-title">${title}</div>
+                        <div class="news-card-pro">
+                            <div class="news-img-wrap">
+                                ${bannerHTML}
+                                <div class="news-gradient"></div>
+                                <div class="news-pro-header">
+                                    <img src="${ava}" class="news-pro-ava">
+                                    <div class="news-pro-title">${title}</div>
+                                </div>
                             </div>
-                            ${bannerHTML}
-                            <div class="news-text">${text}</div>
-                            <div style="padding: 0 12px 12px;"><a href="${link}" class="btn" style="text-decoration:none; display:block; text-align:center;">Перейти</a></div>
+                            <div style="padding: 16px; font-size: 12px; color: #ccc; line-height: 1.6; white-space: pre-wrap;">${text}</div>
+                            <div style="padding: 0 16px 16px;"><a href="${link}" class="btn" style="text-decoration:none; display:block; text-align:center; border-radius: 12px; font-size: 13px;">Подробнее</a></div>
                         </div>`;
                 });
             }
@@ -1432,13 +1491,13 @@
                     }
 
                     postsBox.innerHTML += `
-                        <div class="card" style="border-left: 3px solid #00aaff; margin-bottom: 12px; padding: 15px; background: rgba(0, 170, 255, 0.03);">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
-                                <div style="font-size: 10px; color: #777; font-weight: 800;">🕒 ${p.time}</div>
+                        <div class="clan-post-pro">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
+                                <div style="font-size: 10px; color: #888; font-weight: 800; letter-spacing: 1px;">🕒 ${p.time}</div>
                                 ${deleteBtn}
                             </div>
                             ${bannersHtml}
-                            <div style="font-size: 13px; color: #eee; line-height: 1.5; white-space: pre-wrap;">${p.text}</div>
+                            <div style="font-size: 13px; color: #e0e0e0; line-height: 1.6; white-space: pre-wrap; letter-spacing: 0.2px;">${p.text}</div>
                         </div>`;
                 });
             } else {
@@ -1472,7 +1531,8 @@
             const desc = document.getElementById('clan-desc-input').value;
             const isOpen = document.getElementById('clan-status').value;
             const ava = document.getElementById('clan-ava-input').value || 'none';
-            tg.sendData(JSON.stringify({ action: "edit_clan", desc: desc, is_open: isOpen, ava: ava }));
+            const tgLink = document.getElementById('clan-tg-input').value || 'none';
+            tg.sendData(JSON.stringify({ action: "edit_clan", desc: desc, is_open: isOpen, ava: ava, tg: tgLink }));
             showToast("Настройки клана сохранены!");
         }
 
