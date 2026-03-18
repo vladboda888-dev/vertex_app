@@ -51,6 +51,29 @@
             pointer-events: none;
         }
 
+        /* === АНИМИРОВАННЫЙ ФОН (СФЕРЫ) === */
+        .bg-blobs {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -2;
+            overflow: hidden; pointer-events: none;
+        }
+        .blob {
+            position: absolute; filter: blur(80px); opacity: 0.35;
+            border-radius: 50%; animation: floatBlob 20s infinite alternate ease-in-out;
+        }
+        .blob-1 { width: 300px; height: 300px; background: var(--accent); top: -10%; left: -20%; }
+        .blob-2 { width: 400px; height: 400px; background: #0055ff; bottom: -20%; right: -20%; animation-delay: -5s; }
+        .blob-3 { width: 250px; height: 250px; background: var(--gold); top: 30%; left: 50%; animation-delay: -10s; opacity: 0.2; }
+
+        @keyframes floatBlob {
+            0% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(50px, -50px) scale(1.1); }
+            66% { transform: translate(-30px, 30px) scale(0.9); }
+            100% { transform: translate(40px, 40px) scale(1.05); }
+        }
+        
+        /* Делаем сетку чуть мягче, чтобы она сочеталась со сферами */
+        .bg-grid { opacity: 0.6; }
+        
         /* === ПРЕМИУМ КАРТОЧКИ КЛАНОВ === */
         .clan-card-premium {
             background: linear-gradient(145deg, rgba(25, 25, 30, 0.95) 0%, rgba(10, 10, 15, 0.95) 100%);
@@ -81,8 +104,8 @@
             border-radius: 20px; overflow: hidden; margin-bottom: 24px;
             box-shadow: 0 12px 35px rgba(0,0,0,0.7);
         }
-        .news-img-wrap { position: relative; width: 100%; height: 180px; }
-        .news-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+        .news-img-wrap { position: relative; width: 100%; height: 230px; }
+        .news-img-wrap img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
         .news-gradient {
             position: absolute; bottom: 0; left: 0; width: 100%; height: 120px;
             background: linear-gradient(to top, var(--bg-surface) 0%, transparent 100%);
@@ -307,9 +330,55 @@
         /* Расширенная карточка заказа бустера */
         .order-detail { font-size: 11px; color: #ccc; margin: 4px 0; display: flex; align-items: center; gap: 6px; }
         .order-detail i { color: #00aaff; font-style: normal; font-size: 12px; }
+
+        /* === ПРЕМИУМ ПРОФИЛЬ === */
+        .profile-header-card {
+            background: linear-gradient(135deg, rgba(255, 200, 0, 0.15) 0%, rgba(15, 10, 0, 0.95) 100%);
+            border: 1px solid rgba(255, 200, 0, 0.3);
+            border-radius: 20px; padding: 25px; margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(255, 200, 0, 0.05);
+            position: relative; overflow: hidden;
+        }
+        .profile-header-card::before {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(255,200,0,0.1) 0%, transparent 60%);
+            pointer-events: none; animation: pulseGlow 4s infinite alternate;
+        }
+        .btn-profile-action {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.05) 0%, rgba(0, 0, 0, 0.4) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3); padding: 15px 5px;
+            backdrop-filter: blur(10px); transition: 0.3s; flex-direction: column; gap: 8px;
+            color: #fff; font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+        }
+        .btn-profile-action:active { transform: scale(0.95) translateY(2px); border-color: var(--accent); background: rgba(230,0,0,0.1); }
+        .achieve-row-pro {
+            background: linear-gradient(90deg, rgba(255,255,255,0.03) 0%, rgba(10,10,15,0.8) 100%);
+            border: 1px solid rgba(255,255,255,0.05); border-left: 3px solid #555;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: 0.2s;
+        }
+
+        /* === ТОП ИГРОКОВ КОСМОС === */
+        .podium { margin-top: 25px; margin-bottom: 45px; }
+        .rank-1 .podium-bar { background: linear-gradient(180deg, rgba(255,200,0,0.4) 0%, rgba(20,20,25,0.9) 100%); box-shadow: 0 -10px 30px rgba(255,200,0,0.25); }
+        .rank-2 .podium-bar { background: linear-gradient(180deg, rgba(224,224,224,0.4) 0%, rgba(20,20,25,0.9) 100%); box-shadow: 0 -10px 30px rgba(224,224,224,0.2); }
+        .rank-3 .podium-bar { background: linear-gradient(180deg, rgba(205,127,50,0.4) 0%, rgba(20,20,25,0.9) 100%); box-shadow: 0 -10px 30px rgba(205,127,50,0.2); }
+        
+        .leader-item-pro {
+            background: linear-gradient(90deg, rgba(255,255,255,0.03) 0%, rgba(10,10,15,0.8) 100%);
+            border: 1px solid rgba(255,255,255,0.05); border-left: 3px solid var(--accent);
+            border-radius: 14px; padding: 14px 18px; margin-bottom: 10px;
+            display: flex; align-items: center; box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+        }
     </style>
 </head>
 <body>
+    <div class="bg-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+    
     <div class="bg-grid"></div>
     
     <div id="toast-container"></div>
@@ -392,43 +461,52 @@
     </div>
 
     <div id="p-profile" class="page">
-        <div class="card card-gold">
-            <div style="color: var(--gold); font-size: 11px; font-weight: 800; letter-spacing: 1px;">ВАШ БАЛАНС</div>
-            <div style="font-size: 36px; font-weight: 900; font-family: 'Orbitron'; margin: 5px 0;" id="u-bal">0 G</div>
-            <div class="xp-container">
+        <div class="profile-header-card">
+            <div style="color: var(--gold); font-size: 10px; font-weight: 900; letter-spacing: 2px; margin-bottom: 5px; text-shadow: 0 0 10px rgba(255,200,0,0.5);">СЧЕТ АККАУНТА</div>
+            <div style="font-size: 44px; font-weight: 900; font-family: 'Orbitron'; margin-bottom: 20px; text-shadow: 0 0 25px rgba(255,200,0,0.4);" id="u-bal">0 G</div>
+            
+            <div class="xp-container" style="background: rgba(0,0,0,0.4); padding: 14px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.05); backdrop-filter: blur(5px); margin-top: 0;">
                 <div class="xp-header">
-                    <span>УРОВЕНЬ <b id="u-lvl" style="color: #fff;">1</b></span>
-                    <span id="u-xp-text">0 / 5000 XP</span>
+                    <span style="color: #00aaff; font-weight: 900; text-shadow: 0 0 10px rgba(0,170,255,0.3);">УРОВЕНЬ <b id="u-lvl" style="color: #fff;">1</b></span>
+                    <span id="u-xp-text" style="color: #fff; font-family: 'Orbitron'; font-size: 10px;">0 / 5000 XP</span>
                 </div>
-                <div class="xp-track"><div class="xp-fill" id="u-xp-fill"></div></div>
+                <div class="xp-track" style="height: 10px; background: rgba(0,0,0,0.6); border-color: rgba(255,255,255,0.05);">
+                    <div class="xp-fill" id="u-xp-fill" style="box-shadow: 0 0 15px var(--accent); background: linear-gradient(90deg, #aa0000, #ff3333);"></div>
+                </div>
             </div>
         </div>
 
-        <div id="my-active-order" style="display: none;" class="card">
+        <div id="my-active-order" style="display: none; border-left: 4px solid var(--accent); background: linear-gradient(90deg, rgba(230,0,0,0.1) 0%, rgba(15,15,20,0.9) 100%);" class="card">
             <div class="section-title" style="margin-top:0;">Ваш текущий заказ</div>
-            <div style="display:flex; justify-content:space-between; font-weight:800; margin-bottom:8px;">
-                <span>Заказ #<span id="my-o-id"></span></span>
-                <span id="my-o-status" style="color:var(--gold)">Ожидание</span>
+            <div style="display:flex; justify-content:space-between; font-weight:800; margin-bottom:12px;">
+                <span style="font-family: 'Orbitron'; font-size: 14px;">Заказ #<span id="my-o-id"></span></span>
+                <span id="my-o-status" style="color:var(--gold); text-shadow: 0 0 10px rgba(255,200,0,0.3);">Ожидание</span>
             </div>
-            <button id="btn-cancel-order" class="btn btn-outline" style="padding:10px; font-size:12px; margin-bottom:5px;" onclick="cancelMyOrder()">Отменить заказ</button>
-            <button id="btn-refund-order" class="btn btn-outline" style="padding:10px; font-size:12px; display:none;" onclick="refundMyOrder()">Возврат (штраф 20%)</button>
+            <button id="btn-cancel-order" class="btn btn-outline" style="padding:12px; font-size:12px; margin-bottom:5px; border-radius: 12px;" onclick="cancelMyOrder()">Отменить заказ</button>
+            <button id="btn-refund-order" class="btn btn-outline" style="padding:12px; font-size:12px; display:none; border-radius: 12px;" onclick="refundMyOrder()">Возврат (штраф 20%)</button>
         </div>
         
-        <div class="grid-2">
-            <button class="btn btn-dark" onclick="sendAction('get_daily')">🎁 Бонус</button>
-            <button class="btn btn-dark" onclick="showTab('xpshop')">🏪 Магазин XP</button>
+        <div class="grid-2" style="margin-bottom: 25px;">
+            <button class="btn btn-profile-action" onclick="sendAction('get_daily')">
+                <span style="font-size:28px; filter: drop-shadow(0 0 10px rgba(255,200,0,0.5));">🎁</span>
+                <span>Ежедневный<br>Бонус</span>
+            </button>
+            <button class="btn btn-profile-action" onclick="showTab('xpshop')">
+                <span style="font-size:28px; filter: drop-shadow(0 0 10px rgba(0,170,255,0.5));">💎</span>
+                <span>Магазин<br>Опыта</span>
+            </button>
         </div>
         
         <div class="section-title">Достижения</div>
-        <div class="achieve-row">
-            <div class="achieve-icon">🎖</div>
+        <div class="achieve-row achieve-row-pro">
+            <div class="achieve-icon" style="box-shadow: 0 0 15px rgba(255,200,0,0.2); border-color: rgba(255,200,0,0.4);">🎖</div>
             <div class="achieve-info">
                 <div class="achieve-title">Новобранец</div>
                 <div class="achieve-desc">Зарегистрироваться в системе Vertex Ultimate.</div>
             </div>
         </div>
-        <div class="achieve-row">
-            <div class="achieve-icon" style="background: rgba(0, 255, 102, 0.1); border-color: rgba(0, 255, 102, 0.3);">🎯</div>
+        <div class="achieve-row achieve-row-pro" style="border-left-color: #00ff66;">
+            <div class="achieve-icon" style="background: rgba(0, 255, 102, 0.1); border-color: rgba(0, 255, 102, 0.3); box-shadow: 0 0 15px rgba(0,255,102,0.2);">🎯</div>
             <div class="achieve-info">
                 <div class="achieve-title">Стрелок</div>
                 <div class="achieve-desc">Сыграть в тренировку Аима в игровом центре.</div>
@@ -436,20 +514,20 @@
         </div>
 
         <div class="section-title">Промокоды</div>
-        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-            <input type="text" id="promo-val" placeholder="Введите код..." style="margin:0;">
-            <button class="btn" style="width: auto; padding: 0 25px;" onclick="usePromo()">OK</button>
+        <div style="display: flex; gap: 10px; margin-bottom: 25px;">
+            <input type="text" id="promo-val" placeholder="Введите код..." style="margin:0; border-radius: 14px;">
+            <button class="btn" style="width: auto; padding: 0 25px; border-radius: 14px; box-shadow: 0 0 15px rgba(230,0,0,0.4);" onclick="usePromo()">OK</button>
         </div>
         
-        <div class="card">
-            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 8px; font-weight: 600;">ВАША РЕФЕРАЛЬНАЯ ССЫЛКА</div>
-            <div style="font-size: 10px; color: #ccc; margin-bottom: 10px; line-height: 1.4;">
+        <div class="card" style="background: linear-gradient(145deg, rgba(20,20,25,0.9) 0%, rgba(5,5,10,0.9) 100%); border: 1px solid rgba(255,255,255,0.05); border-radius: 18px;">
+            <div style="font-size: 11px; color: #00aaff; margin-bottom: 10px; font-weight: 900; letter-spacing: 1px;">ВАША РЕФЕРАЛЬНАЯ ССЫЛКА</div>
+            <div style="font-size: 10px; color: #aaa; margin-bottom: 15px; line-height: 1.5;">
                 Делись этой ссылкой с друзьями! Выстраивай свою сеть и получай бонусы, когда новые пользователи запускают бота и делают заказ по твоему приглашению ты получаешь призы!.
             </div>
-            <div id="ref-link" style="background: var(--bg-surface-light); padding: 12px; border-radius: 8px; font-size: 11px; color: var(--accent); border: 1px dashed var(--border-color); word-break: break-all; margin-bottom: 10px;">
+            <div id="ref-link" style="background: rgba(0,0,0,0.5); padding: 14px; border-radius: 12px; font-size: 11px; color: #fff; border: 1px dashed rgba(0,170,255,0.3); word-break: break-all; margin-bottom: 15px; text-align: center; font-family: monospace;">
                 Загрузка...
             </div>
-            <button class="btn btn-dark" style="padding: 12px; font-size: 12px;" onclick="copyRef()">Копировать</button>
+            <button class="btn btn-dark" style="padding: 14px; font-size: 12px; border-radius: 12px; border-color: rgba(0,170,255,0.3); color: #00aaff;" onclick="copyRef()">Копировать</button>
         </div>
     </div>
 
@@ -870,7 +948,9 @@
                     const shortName = name.length > 7 ? name.substring(0, 7) + ".." : name;
                     
                     const frameClass = frame !== 'none' ? frame : '';
-                    const podiumHTML = `<div style="display:flex; flex-direction:column; align-items:center;" class="${frameClass}"><div style="font-size:10px; color:${color}; margin-bottom:2px; font-weight:900; text-shadow: 0 0 5px ${color};">${shortName}</div><div style="font-size:20px; line-height:1;">${index + 1}</div><div style="font-size:8px; margin-top:4px; color:var(--gold);">${xp} XP</div></div>`;
+                    
+                    // Обновленный дизайн для Топ-3 (Подиум)
+                    const podiumHTML = `<div style="display:flex; flex-direction:column; align-items:center;" class="${frameClass}"><div style="font-size:11px; color:${color}; margin-bottom:6px; font-weight:900; text-shadow: 0 0 8px ${color};">${shortName}</div><div style="font-size:26px; line-height:1; font-family:'Orbitron'; text-shadow: 0 5px 10px rgba(0,0,0,0.5);">${index + 1}</div><div style="font-size:9px; margin-top:8px; background:rgba(0,0,0,0.6); padding:4px 8px; border-radius:8px; color:var(--gold); border: 1px solid rgba(255,200,0,0.2);">${xp} XP</div></div>`;
                     
                     if (index === 0) {
                         const r1 = document.querySelector('.rank-1 .podium-bar');
@@ -882,7 +962,14 @@
                         const r3 = document.querySelector('.rank-3 .podium-bar');
                         if(r3) r3.innerHTML = podiumHTML;
                     } else {
-                        leaderList.innerHTML += `<div class="leader-item ${frameClass}"><div class="leader-rank">#${index + 1}</div><div class="leader-name" style="color:${color}; font-weight:900;">${name}</div><div class="leader-xp">${xp} XP</div></div>`;
+                        // Обновленный дизайн для мест с 4 по 10
+                        let borderColor = index === 3 ? '#ff3333' : (index === 4 ? '#00aaff' : '#555');
+                        leaderList.innerHTML += `
+                        <div class="leader-item-pro ${frameClass}" style="border-left-color: ${borderColor};">
+                            <div class="leader-rank" style="width: 40px; font-size:18px; font-family:'Orbitron'; color:#777; font-weight: 900;">#${index + 1}</div>
+                            <div class="leader-name" style="color:${color}; font-weight:900; font-size:14px; flex-grow: 1; text-shadow: 0 0 5px rgba(255,255,255,0.2);">${name}</div>
+                            <div class="leader-xp" style="background:rgba(230,0,0,0.1); color:var(--accent); padding:6px 10px; border-radius:8px; font-size:11px; border: 1px solid rgba(230,0,0,0.2); box-shadow: inset 0 0 10px rgba(230,0,0,0.05);">${xp} XP</div>
+                        </div>`;
                     }
                 });
             }
