@@ -161,13 +161,34 @@
         /* Анимация пульсации для крутых рамок */
         @keyframes pulse-glow { 0% { opacity: 0.8; transform: scale(1); } 50% { opacity: 1; transform: scale(1.02); } 100% { opacity: 0.8; transform: scale(1); } }
         .frame-gold .frame-base, .frame-neon .frame-base { animation: pulse-glow 2s infinite ease-in-out; }
+
+        /* === ПАНЕЛЬ БУСТЕРА 2.0 === */
+        .booster-nav { display: flex; gap: 8px; margin: 20px 0 15px; background: rgba(255,255,255,0.03); padding: 5px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); }
+        .b-nav-item { flex: 1; text-align: center; padding: 10px; font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-secondary); border-radius: 8px; cursor: pointer; transition: 0.3s; }
+        .b-nav-item.active { background: rgba(0, 170, 255, 0.15); color: #00aaff; box-shadow: 0 0 15px rgba(0, 170, 255, 0.2); }
+        
+        .colleague-card {
+            background: linear-gradient(145deg, rgba(20, 20, 25, 0.9) 0%, rgba(10, 10, 15, 0.95) 100%);
+            border: 1px solid rgba(0, 170, 255, 0.1); border-left: 3px solid #00aaff;
+            border-radius: 16px; padding: 16px; margin-bottom: 12px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 15px;
+        }
+        .c-ava { width: 45px; height: 45px; border-radius: 50%; background: #111; display: flex; align-items: center; justify-content: center; font-size: 20px; border: 2px solid rgba(255,255,255,0.05); box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
+        .c-status { width: 10px; height: 10px; border-radius: 50%; display: inline-block; box-shadow: 0 0 8px currentColor; }
+        
+        .quest-card {
+            background: linear-gradient(145deg, rgba(25, 20, 0, 0.8) 0%, rgba(10, 10, 15, 0.95) 100%);
+            border: 1px solid rgba(255, 200, 0, 0.15); border-radius: 16px; padding: 16px; margin-bottom: 15px;
+            position: relative; overflow: hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.4);
+        }
+        .quest-card.done { border-color: rgba(0, 255, 102, 0.3); background: linear-gradient(145deg, rgba(0, 50, 20, 0.8) 0%, rgba(10, 10, 15, 0.95) 100%); }
         
         /* Новости */
         .news-card { background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); overflow: hidden; margin-bottom: 15px; }
         .news-header { display: flex; align-items: center; padding: 12px; gap: 10px; background: rgba(255,255,255,0.02); }
         .news-ava { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; }
         .news-title { font-size: 13px; font-weight: 800; color: #fff; }
-        .news-banner { width: 100%; max-height: 150px; object-fit: cover; }
+        .news-banner { width: 100%; height: auto; max-height: 250px; object-fit: contain; background: #07070a; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
         .news-text { padding: 12px; font-size: 11px; color: #ccc; line-height: 1.4; white-space: pre-wrap; }
         
         /* Шапка */
@@ -532,20 +553,47 @@
     </div>
 
     <div id="p-booster" class="page">
-        <div class="section-title" style="color: #00aaff;">Аналитика Бустера</div>
+        <div class="card card-gold" style="display:flex; align-items:center; gap: 15px; margin-bottom: 15px;">
+            <div style="font-size:40px; text-shadow: 0 0 15px rgba(255,200,0,0.5);">👨‍💻</div>
+            <div style="flex-grow: 1;">
+                <div style="font-size: 14px; font-weight: 900; color: var(--gold); margin-bottom: 4px; font-family: 'Orbitron';">РАБОЧИЙ КАБИНЕТ</div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="font-size: 11px; color: #ccc;">Рейтинг: <span id="b-rating" style="color:#fff; font-weight:900;">0.0</span> <span style="color:var(--gold);">★</span></div>
+                    <div style="font-size: 11px; color: #ccc;">Отзывов: <span id="b-completed" style="color:#fff; font-weight:900;">0</span></div>
+                </div>
+            </div>
+        </div>
+
         <div class="stats-row">
             <div class="stat-card" style="border-color: rgba(0, 170, 255, 0.3);">
                 <div class="stat-val" style="color: #00aaff;" id="b-stat-orders">0</div>
                 <div class="stat-label">Доступно заказов</div>
             </div>
-            <div class="stat-card" style="border-color: rgba(255, 204, 0, 0.3);">
-                <div class="stat-val" style="color: var(--gold);" id="b-stat-earned">В работе</div>
-                <div class="stat-label">Статус выплат</div>
+            <div class="stat-card" style="border-color: rgba(0, 255, 102, 0.3);">
+                <div class="stat-val" style="color: var(--success);" id="b-my-total">0</div>
+                <div class="stat-label">Выполнено всего</div>
             </div>
         </div>
 
-        <div class="section-title" style="color: #00aaff;">Биржа заказов</div>
-        <div id="booster-orders"></div>
+        <div class="booster-nav">
+            <div class="b-nav-item active" onclick="switchBTab('exchange')">Биржа</div>
+            <div class="b-nav-item" onclick="switchBTab('colleagues')">Коллеги</div>
+            <div class="b-nav-item" onclick="switchBTab('quests')">Квесты</div>
+        </div>
+
+        <div id="b-tab-exchange">
+            <div id="booster-orders"></div>
+        </div>
+
+        <div id="b-tab-colleagues" style="display: none;">
+            <div class="section-title" style="margin-top:0;">Список персонала</div>
+            <div id="colleagues-list"></div>
+        </div>
+
+        <div id="b-tab-quests" style="display: none;">
+            <div class="section-title" style="margin-top:0; color: var(--gold);">Карьерные достижения</div>
+            <div id="quests-list"></div>
+        </div>
     </div>
 
     <div id="p-admin" class="page">
@@ -1042,6 +1090,90 @@
                 if (hasMyClan && myClanAdmin) { myClanAdmin.style.display = 'block'; }
             } else if (clansBox) {
                 clansBox.innerHTML = "<div style='text-align:center; color:#777; padding:20px;'>Кланов пока нет</div>";
+            }
+
+            // Парсинг статистики и списка Бустеров
+            const bStatData = params.get('bstat');
+            const bListData = params.get('blist');
+            let myTotalCompleted = 0;
+
+            if (bStatData && role !== 'client') {
+                const [bComp, bRat] = bStatData.split(':');
+                const elRat = document.getElementById('b-rating');
+                const elComp = document.getElementById('b-completed');
+                if(elRat) elRat.innerText = bRat;
+                if(elComp) elComp.innerText = bComp;
+            }
+
+            if (bListData && role !== 'client') {
+                const colleaguesBox = document.getElementById('colleagues-list');
+                const boosters = bListData.split('|');
+                
+                if (colleaguesBox) colleaguesBox.innerHTML = "";
+                
+                // Рендер коллег
+                boosters.forEach(b => {
+                    if (!b) return;
+                    const [bId, bName, bTotalC, bRating, bRevCount, isBusy] = b.split('*');
+                    
+                    if (bId === userId.toString()) {
+                        myTotalCompleted = parseInt(bTotalC);
+                        const myTotalEl = document.getElementById('b-my-total');
+                        if (myTotalEl) myTotalEl.innerText = myTotalCompleted;
+                    }
+                    
+                    const statCol = isBusy === '1' ? 'var(--danger)' : 'var(--success)';
+                    const statTxt = isBusy === '1' ? 'Занят' : 'Свободен';
+                    
+                    if (colleaguesBox) {
+                        colleaguesBox.innerHTML += `
+                            <div class="colleague-card">
+                                <div class="c-ava">👾</div>
+                                <div style="flex-grow: 1;">
+                                    <div style="font-size: 14px; font-weight: 900; color: #fff; display: flex; align-items: center; gap: 8px;">
+                                        ${bName} <div class="c-status" style="color: ${statCol};"></div>
+                                    </div>
+                                    <div style="font-size: 10px; color: #888; margin-top: 4px;">ID: ${bId} • Статус: <span style="color:${statCol}; font-weight:800;">${statTxt}</span></div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-size: 14px; font-weight: 900; color: var(--gold);">${bRating} ★</div>
+                                    <div style="font-size: 9px; color: var(--text-secondary); margin-top: 2px;">Заказов: ${bTotalC}</div>
+                                </div>
+                            </div>`;
+                    }
+                });
+
+                // Рендер квестов
+                const questsBox = document.getElementById('quests-list');
+                if (questsBox) {
+                    questsBox.innerHTML = "";
+                    const qList = [
+                        { target: 5, rew: 50 }, { target: 15, rew: 150 }, 
+                        { target: 30, rew: 350 }, { target: 50, rew: 800 }, { target: 100, rew: 2000 }
+                    ];
+
+                    qList.forEach((q, idx) => {
+                        const isDone = myTotalCompleted >= q.target;
+                        const prog = Math.min((myTotalCompleted / q.target) * 100, 100);
+                        const titleColor = isDone ? 'var(--success)' : 'var(--gold)';
+                        const iconHtml = isDone ? '✅' : '🎁';
+
+                        questsBox.innerHTML += `
+                            <div class="quest-card ${isDone ? 'done' : ''}">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <div>
+                                        <div style="font-size: 13px; font-weight: 900; color: ${titleColor};">Этап ${idx + 1}: ${q.target} заказов</div>
+                                        <div style="font-size: 10px; color: #aaa; margin-top: 4px;">Награда: <span style="color:var(--gold); font-weight:800;">${q.rew} Gold</span></div>
+                                    </div>
+                                    <div style="font-size: 24px; filter: drop-shadow(0 0 10px rgba(255,200,0,0.3));">${iconHtml}</div>
+                                </div>
+                                <div class="xp-track" style="height: 6px; background: rgba(0,0,0,0.5); border: none;">
+                                    <div class="xp-fill" style="width: ${prog}%; background: ${isDone ? 'var(--success)' : 'linear-gradient(90deg, #aa0000, var(--gold))'}; box-shadow: 0 0 10px ${isDone ? 'var(--success)' : 'var(--gold)'};"></div>
+                                </div>
+                                <div style="text-align: right; font-size: 9px; color: #888; margin-top: 6px; font-family: 'Orbitron';">${Math.min(myTotalCompleted, q.target)} / ${q.target}</div>
+                            </div>`;
+                    });
+                }
             }
             
             const ordersData = params.get('orders');
@@ -1688,6 +1820,15 @@
             });
         }
 
+        function switchBTab(tab) {
+            document.getElementById('b-tab-exchange').style.display = tab === 'exchange' ? 'block' : 'none';
+            document.getElementById('b-tab-colleagues').style.display = tab === 'colleagues' ? 'block' : 'none';
+            document.getElementById('b-tab-quests').style.display = tab === 'quests' ? 'block' : 'none';
+            document.querySelectorAll('.b-nav-item').forEach(el => el.classList.remove('active'));
+            event.target.classList.add('active');
+            tg.HapticFeedback.selectionChanged();
+        }
+                
         function usePromo() {
             const val = document.getElementById('promo-val').value;
             if(!val) return showToast("Введите код!", "error");
