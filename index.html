@@ -51,18 +51,17 @@
             pointer-events: none;
         }
 
-        /* === АНИМИРОВАННЫЙ ФОН (СФЕРЫ) === */
-        .bg-blobs {
+        /* === АМБИЕНТНЫЙ КОСМИЧЕСКИЙ ФОН === */
+        .ambient-bg {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -2;
-            overflow: hidden; pointer-events: none;
+            background: radial-gradient(circle at 20% 30%, rgba(230, 0, 0, 0.05) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 70%, rgba(0, 170, 255, 0.05) 0%, transparent 50%);
+            animation: ambientShift 15s infinite alternate ease-in-out;
         }
-        .blob {
-            position: absolute; filter: blur(80px); opacity: 0.35;
-            border-radius: 50%; animation: floatBlob 20s infinite alternate ease-in-out;
+        @keyframes ambientShift {
+            0% { transform: scale(1); filter: hue-rotate(0deg); }
+            100% { transform: scale(1.2); filter: hue-rotate(15deg); }
         }
-        .blob-1 { width: 300px; height: 300px; background: var(--accent); top: -10%; left: -20%; }
-        .blob-2 { width: 400px; height: 400px; background: #0055ff; bottom: -20%; right: -20%; animation-delay: -5s; }
-        .blob-3 { width: 250px; height: 250px; background: var(--gold); top: 30%; left: 50%; animation-delay: -10s; opacity: 0.2; }
 
         @keyframes floatBlob {
             0% { transform: translate(0, 0) scale(1); }
@@ -374,7 +373,7 @@
         .plane-arena { width: 100%; height: 320px; background: #07070a; border: 2px solid #00aaff; border-radius: var(--radius-md); position: relative; overflow: hidden; touch-action: none; box-shadow: inset 0 0 20px rgba(0, 170, 255, 0.1); }
         #plane { position: absolute; width: 30px; height: 30px; font-size: 24px; display: flex; justify-content: center; align-items: center; left: 50%; top: 80%; transform: translate(-50%, -50%); z-index: 10; text-shadow: 0 0 10px #00aaff; }
         .bullet { position: absolute; width: 6px; height: 18px; background: #ff0000; border-radius: 10px; box-shadow: 0 0 10px #ff0000; }
-        .minigame-arena { width: 100%; height: 250px; background: var(--bg-base); border: 2px solid var(--border-color); border-radius: var(--radius-md); position: relative; overflow: hidden; margin-top: 15px; display: none; }
+        .minigame-arena { width: 100%; height: 250px; background: var(--bg-base); border: 2px solid var(--border-color); border-radius: var(--radius-md); position: relative; overflow: hidden; margin-top: 15px; }
         .target { position: absolute; width: 45px; height: 45px; background: radial-gradient(circle, #fff 20%, var(--accent) 30%, var(--accent) 100%); border-radius: 50%; box-shadow: 0 0 15px var(--accent-glow); cursor: crosshair; transform: scale(0); transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .target.show { transform: scale(1); }
         .game-stats { display: flex; justify-content: space-between; font-size: 12px; font-family: 'Orbitron'; color: var(--accent); padding: 10px; background: var(--bg-surface); border-bottom: 1px solid var(--border-color); }
@@ -538,15 +537,12 @@
     </style>
 </head>
 <body>
-    <div class="bg-blobs">
-        <div class="blob blob-1"></div>
-        <div class="blob blob-2"></div>
-        <div class="blob blob-3"></div>
-    </div>
+    <div class="ambient-bg"></div>
     
     <div class="bg-grid"></div>
     
     <div id="toast-container"></div>
+    
 
     <header>
         <div class="logo">VERTEX BOOST</div>
@@ -1151,8 +1147,12 @@
                 const btnCancel = document.getElementById('btn-cancel-order');
                 const btnRefund = document.getElementById('btn-refund-order');
                 
-                if(ostatus === 'pending' || ostatus === 'awaiting_payment') {
-                    if(stEl) stEl.innerText = "Ожидание админа";
+                if (ostatus === 'awaiting_payment') {
+                    if(stEl) { stEl.innerText = "Ожидание админа"; stEl.style.color = 'var(--gold)'; }
+                    if(btnCancel) btnCancel.style.display = 'block';
+                    if(btnRefund) btnRefund.style.display = 'none';
+                } else if (ostatus === 'pending') {
+                    if(stEl) { stEl.innerText = "Ожидание бустера"; stEl.style.color = '#ff9900'; }
                     if(btnCancel) btnCancel.style.display = 'block';
                     if(btnRefund) btnRefund.style.display = 'none';
                 } else if (ostatus === 'working') {
