@@ -122,8 +122,8 @@
         /* Элементы форм */
         .input-group { margin-bottom: 15px; }
         .input-label { display: block; font-size: 10px; color: var(--text-secondary); margin-bottom: 6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-        select, input { width: 100%; background: var(--bg-surface-light); border: 1px solid var(--border-color); padding: 16px; border-radius: var(--radius-md); color: var(--text-primary); font-size: 14px; font-family: 'Inter', sans-serif; transition: var(--transition); appearance: none; }
-        input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(230, 0, 0, 0.15); }
+        select, input, textarea { width: 100%; background: var(--bg-surface-light); border: 1px solid var(--border-color); padding: 16px; border-radius: var(--radius-md); color: var(--text-primary); font-size: 14px; font-family: 'Inter', sans-serif; transition: var(--transition); appearance: none; resize: vertical; margin-bottom: 10px; }
+        input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(230, 0, 0, 0.15); }
         input::placeholder { color: #555; }
 
         /* Кнопки */
@@ -640,7 +640,7 @@
             <div style="margin-top: 25px; border-top: 1px dashed var(--border-color); padding-top: 15px;">
                 <div style="color: #00aaff; font-weight: 800; font-size: 12px; margin-bottom: 10px;">📰 Создать пост</div>
                 <input type="text" id="clan-banners-input" placeholder="Ссылки на фото (через запятую)">
-                <input type="text" id="clan-post-input" placeholder="Текст новости...">
+                <textarea id="clan-post-input" placeholder="Текст новости... (Можно писать в столбик, нажимая Enter)" rows="4"></textarea>
                 <button class="btn btn-outline" style="border-color: #00aaff; color: #00aaff;" onclick="postClanNews()">Опубликовать</button>
             </div>
         </div>
@@ -800,8 +800,7 @@
             if (cPostsData) {
                 globalClanPosts = cPostsData.split('|').map(p => {
                     const parts = p.split('*');
-                    // Добавили banners
-                    return { clanId: parts[0], text: parts[1], time: parts[2], banners: parts[3] || 'none' };
+                    return { id: parts[0], clanId: parts[1], text: parts[2], time: parts[3], banners: parts[4] || 'none' };
                 }).filter(p => p.clanId);
             }
 
@@ -831,13 +830,13 @@
                     }
 
                     const statusColor = cIsOpen === '1' ? 'var(--success)' : 'var(--danger)';
-                    const statusText = cIsOpen === '1' ? 'Открыт' : 'Закрыт';
+                    const statusText = cIsOpen === '1' ? 'Набор Открыт' : 'Набор Закрыт';
                     
                     // Если есть аватарка, ставим её, если нет - базовый щит
                     let avaHtml = cAvatar && cAvatar !== 'none' ? `<img src="${cAvatar}" style="width: 45px; height: 45px; border-radius: 10px; object-fit: cover; border: 1px solid var(--gold);">` : `<div style="font-size: 28px; text-shadow: 0 0 10px var(--gold);">🛡️</div>`;
 
                     clansBox.innerHTML += `
-                        <div class="card card-clickable" style="border-left: 4px solid var(--gold);" onclick="openClanModal('${cId}', '${cName}')">
+                        <div class="card card-clickable" style="border-left: 4px solid var(--gold);" onclick="openClanModal('${cId}', '${cName}', '${cOwnerId}')">
                             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
                                 <div style="display:flex; gap: 12px; align-items:center;">
                                     ${avaHtml}
@@ -1405,19 +1404,17 @@
             });
         }
 
-        function openClanModal(cId, cName) {
+        function openClanModal(cId, cName, cOwnerId) {
             document.getElementById('modal-clan-title').innerText = cName;
             const postsBox = document.getElementById('modal-clan-posts');
             postsBox.innerHTML = "";
 
-            // Ищем посты только для этого клана
             const clanPosts = globalClanPosts.filter(p => p.clanId === cId.toString());
 
             if (clanPosts.length > 0) {
                 clanPosts.forEach(p => {
                     let bannersHtml = "";
                     if(p.banners && p.banners !== 'none') {
-                        // Режем строку по запятой и чистим пробелы
                         const urls = p.banners.split(',').map(u => u.trim()).filter(u => u);
                         if(urls.length > 0) {
                             bannersHtml = `<div style="display:flex; gap:8px; overflow-x:auto; margin-bottom:10px; padding-bottom:5px;">`;
@@ -1428,9 +1425,18 @@
                         }
                     }
 
+                    // Кнопка удаления появляется только у владельца клана
+                    let deleteBtn = "";
+                    if (cOwnerId === userId.toString()) {
+                        deleteBtn = `<button onclick="deleteClanPost('${p.id}')" style="background:none; border:none; color:var(--danger); font-size:16px; cursor:pointer;">🗑</button>`;
+                    }
+
                     postsBox.innerHTML += `
                         <div class="card" style="border-left: 3px solid #00aaff; margin-bottom: 12px; padding: 15px; background: rgba(0, 170, 255, 0.03);">
-                            <div style="font-size: 10px; color: #777; margin-bottom: 10px; font-weight: 800;">🕒 ${p.time}</div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
+                                <div style="font-size: 10px; color: #777; font-weight: 800;">🕒 ${p.time}</div>
+                                ${deleteBtn}
+                            </div>
                             ${bannersHtml}
                             <div style="font-size: 13px; color: #eee; line-height: 1.5; white-space: pre-wrap;">${p.text}</div>
                         </div>`;
@@ -1447,6 +1453,16 @@
             tg.HapticFeedback.impactOccurred('medium');
         }
 
+        function deleteClanPost(postId) {
+            tg.showConfirm("Точно удалить эту новость?", (ok) => {
+                if(ok) {
+                    tg.sendData(JSON.stringify({ action: "del_clan_post", post_id: postId }));
+                    showToast("Новость удалена! Обновите бота.");
+                    closeClanModal();
+                }
+            });
+        }
+        
         function closeClanModal() {
             document.getElementById('clan-modal').style.display = 'none';
             tg.HapticFeedback.impactOccurred('light');
