@@ -731,15 +731,23 @@
         }
 
         // --- ПОБЕДА ---
-        function winGame() {
-            ui.areas[6].style.display = 'none';
-            document.getElementById('progress-bar').style.display = 'none';
-            ui.title.innerText = "СИСТЕМА ВЗЛОМАНА";
-            ui.title.style.color = "var(--neon-gold)";
-            ui.title.style.textShadow = "0 0 30px var(--neon-gold)";
-            ui.info.innerHTML = "Ты прошел этот ад. Твой код:<br><br><strong style='font-size:26px; background:rgba(0,0,0,0.8); padding:15px 20px; border-radius:12px; border:2px solid var(--neon-gold); user-select:all; display:inline-block; margin-top:20px; box-shadow: 0 0 30px rgba(245, 208, 97, 0.4); letter-spacing: 2px;'>STAND-COSMIC-1500</strong><br><br>Сделай скриншот!";
-            tg.HapticFeedback.notificationOccurred('success');
-        }
+    function winGame() {
+        ui.areas[6].style.display = 'none';
+        document.getElementById('progress-bar').style.display = 'none';
+        ui.title.innerText = "СИСТЕМА ВЗЛОМАНА";
+        ui.title.style.color = "var(--neon-gold)";
+        ui.title.style.textShadow = "0 0 30px var(--neon-gold)";
+    
+        // Оставил только сообщение, так как код выдаст сам бот
+        ui.info.innerHTML = "Ты прошел этот ад.<br><br>Возвращайся в бота за своей наградой!";
+        tg.HapticFeedback.notificationOccurred('success');
+
+        // Перенаправляем пользователя в бота с победной командой
+        // ВАЖНО: Замени 'ТВОЙ_ЮЗЕРНЕЙМ_БОТА' на реальный юзернейм твоего бота (без символа @)
+        setTimeout(() => {
+            tg.openTelegramLink('https://t.me/zentrox_BIO?start=win_777_secret');
+        }, 1500); // Задержка в 1.5 секунды, чтобы игрок успел увидеть надпись о победе
+    }
     </script>
 </body>
 </html>
