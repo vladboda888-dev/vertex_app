@@ -3,59 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Протокол C4 - Взлом</title>
+    <title>C4 - Cosmic Protocol</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { background: #0a0a0a; color: #0f0; font-family: monospace; text-align: center; margin: 0; overflow: hidden; user-select: none; touch-action: manipulation; }
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+        
+        body { background: #050510; background-image: radial-gradient(circle at 50% 50%, #1a0b2e 0%, #050510 100%); color: #0ff; font-family: 'Orbitron', sans-serif; text-align: center; margin: 0; overflow: hidden; user-select: none; touch-action: manipulation; }
         #game-container { padding: 20px; height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; box-sizing: border-box; }
-        .btn { background: #0f0; color: #000; border: none; padding: 15px 30px; font-size: 18px; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-top: 20px; box-shadow: 0 0 10px #0f0; border-radius: 5px; }
-        .btn:active { transform: scale(0.95); }
+        
+        .btn { background: linear-gradient(45deg, #0ff, #b026ff); color: #fff; border: none; padding: 15px 35px; font-size: 16px; font-weight: 700; cursor: pointer; text-transform: uppercase; margin-top: 20px; border-radius: 30px; box-shadow: 0 0 20px rgba(0, 255, 255, 0.4); letter-spacing: 2px; transition: 0.2s; }
+        .btn:active { transform: scale(0.95); box-shadow: 0 0 40px rgba(176, 38, 255, 0.8); }
         .hidden { display: none !important; }
         
-        /* Общие стили для арен этапов */
-        .stage-area { width: 100%; height: 60%; position: relative; display: none; background: rgba(0, 255, 0, 0.05); border-radius: 10px; border: 1px solid #0f0; }
+        /* Стеклянные панели арен */
+        .stage-area { width: 100%; height: 60%; position: relative; display: none; background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border-radius: 20px; border: 1px solid rgba(0, 255, 255, 0.2); box-shadow: inset 0 0 20px rgba(0, 255, 255, 0.05); }
         
         /* Этап 1: Аим */
-        .target { width: 50px; height: 50px; background: #ff004c; position: absolute; border-radius: 50%; box-shadow: 0 0 10px #ff004c; }
+        .target { width: 40px; height: 40px; background: radial-gradient(circle, #fff, #b026ff); position: absolute; border-radius: 50%; box-shadow: 0 0 15px #b026ff; animation: pulse 0.5s infinite alternate; }
+        @keyframes pulse { from { transform: scale(0.9); } to { transform: scale(1.1); } }
         
         /* Этап 2: Память */
-        #grid-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 80%; max-width: 300px; margin: 0 auto; margin-top: 20px; }
-        .grid-cell { aspect-ratio: 1; background: #111; border: 1px solid #0f0; border-radius: 5px; transition: background 0.2s; }
-        .grid-cell.active { background: #0f0; box-shadow: 0 0 15px #0f0; }
+        #grid-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: 90%; max-width: 320px; margin: 0 auto; margin-top: 20px; }
+        .grid-cell { aspect-ratio: 1; background: rgba(0, 255, 255, 0.05); border: 1px solid rgba(0, 255, 255, 0.3); border-radius: 10px; transition: all 0.3s; }
+        .grid-cell.active { background: #0ff; box-shadow: 0 0 20px #0ff; border-color: #fff; }
         
         /* Этап 3: Дешифратор */
-        .number-btn { width: 45px; height: 45px; background: #111; border: 1px solid #0f0; color: #0f0; font-size: 20px; font-weight: bold; position: absolute; display: flex; justify-content: center; align-items: center; border-radius: 5px; }
+        .number-btn { width: 40px; height: 40px; background: rgba(176, 38, 255, 0.1); border: 1px solid #b026ff; color: #fff; font-size: 16px; font-weight: bold; position: absolute; display: flex; justify-content: center; align-items: center; border-radius: 50%; box-shadow: 0 0 10px rgba(176, 38, 255, 0.5); }
         
         /* Этап 4: Тайминг */
-        #slider-container { width: 100%; height: 50px; border: 2px solid #0f0; position: relative; margin-top: 30px; border-radius: 10px; overflow: hidden; display: none; }
-        #win-zone { position: absolute; height: 100%; width: 15%; background: rgba(0, 255, 0, 0.5); left: 70%; }
-        #cursor { position: absolute; height: 100%; width: 6px; background: #ff004c; left: 0; box-shadow: 0 0 10px #ff004c; }
+        #slider-container { width: 100%; height: 40px; border: 2px solid rgba(0, 255, 255, 0.5); position: relative; margin-top: 30px; border-radius: 20px; overflow: hidden; display: none; background: rgba(0,0,0,0.5); }
+        #win-zone { position: absolute; height: 100%; width: 10%; background: rgba(176, 38, 255, 0.6); left: 75%; box-shadow: 0 0 15px #b026ff; }
+        #cursor { position: absolute; height: 100%; width: 4px; background: #fff; left: 0; box-shadow: 0 0 15px #fff; }
+
+        /* Этап 5: Ядро */
+        #core-container { width: 40px; height: 80%; border: 2px solid #0ff; border-radius: 20px; position: absolute; left: 20px; bottom: 10%; overflow: hidden; background: rgba(0,0,0,0.5); }
+        #core-fill { width: 100%; height: 50%; background: linear-gradient(to top, #b026ff, #0ff); position: absolute; bottom: 0; transition: height 0.05s linear; }
+        #core-target-zone { width: 100%; height: 20%; background: rgba(255, 255, 255, 0.2); position: absolute; bottom: 60%; border-top: 2px solid #fff; border-bottom: 2px solid #fff; z-index: 2; box-sizing: border-box; }
+        #core-timer { position: absolute; right: 20px; top: 40%; font-size: 40px; color: #fff; text-shadow: 0 0 20px #0ff; font-weight: 900; }
+        #core-btn { position: absolute; right: 20px; bottom: 10%; width: 120px; height: 120px; border-radius: 50%; background: rgba(0, 255, 255, 0.1); border: 3px solid #0ff; color: #0ff; font-size: 16px; font-family: 'Orbitron'; font-weight: bold; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 30px rgba(0, 255, 255, 0.3); }
+        #core-btn:active { background: rgba(0, 255, 255, 0.4); }
         
-        h1 { text-shadow: 0 0 10px #0f0; font-size: 22px; margin-bottom: 5px; }
-        p { color: #aaa; font-size: 14px; margin-top: 0; }
-        #lives { color: #ff004c; font-weight: bold; margin-bottom: 10px; }
+        h1 { text-shadow: 0 0 15px #0ff; font-size: 26px; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px; }
+        p { color: #a5a5b5; font-size: 12px; margin-top: 0; font-family: sans-serif; letter-spacing: 1px; }
+        #lives { color: #b026ff; font-weight: 900; margin-bottom: 15px; font-size: 18px; text-shadow: 0 0 10px #b026ff; }
     </style>
 </head>
 <body>
     <div id="game-container">
-        <h1 id="title">SYSTEM COMPROMISED</h1>
-        <p id="info">Обезвредь систему, чтобы получить 1500G</p>
-        <div id="lives" class="hidden">Ошибки: <span id="lives-count">0/3</span></div>
-        <button id="start-btn" class="btn">Начать взлом</button>
+        <h1 id="title">COSMIC VAULT</h1>
+        <p id="info">Система защиты активна. Уровень угрозы: МАКСИМАЛЬНЫЙ.</p>
+        <div id="lives" class="hidden">ОШИБКИ: <span id="lives-count">0/2</span></div>
+        <button id="start-btn" class="btn">ИНИЦИАЛИЗАЦИЯ</button>
 
         <div id="stage-1-area" class="stage-area"></div>
         
-        <div id="stage-2-area" class="stage-area" style="border: none; background: none;">
+        <div id="stage-2-area" class="stage-area" style="border: none; background: none; box-shadow: none;">
             <div id="grid-container"></div>
         </div>
 
         <div id="stage-3-area" class="stage-area"></div>
 
-        <div id="slider-container">
-            <div id="win-zone"></div>
-            <div id="cursor"></div>
+        <div id="stage-4-area" class="stage-area" style="border: none; background: none; box-shadow: none;">
+            <div id="slider-container">
+                <div id="win-zone"></div>
+                <div id="cursor"></div>
+            </div>
+            <button id="action-btn" class="btn hidden">ОБРЕЗАТЬ ПИТАНИЕ</button>
         </div>
-        <button id="action-btn" class="btn hidden">ОСТАНОВИТЬ</button>
+
+        <div id="stage-5-area" class="stage-area">
+            <div id="core-container">
+                <div id="core-target-zone"></div>
+                <div id="core-fill"></div>
+            </div>
+            <div id="core-timer">5.00</div>
+            <div id="core-btn">TAP</div>
+        </div>
     </div>
 
     <script>
@@ -67,22 +90,15 @@
         const livesDisplay = document.getElementById('lives');
         const livesCountDisplay = document.getElementById('lives-count');
         const startBtn = document.getElementById('start-btn');
-        const actionBtn = document.getElementById('action-btn');
         
         const s1Area = document.getElementById('stage-1-area');
         const s2Area = document.getElementById('stage-2-area');
         const s3Area = document.getElementById('stage-3-area');
-        const sliderContainer = document.getElementById('slider-container');
+        const s4Area = document.getElementById('stage-4-area');
+        const s5Area = document.getElementById('stage-5-area');
 
-        // Глобальные переменные
         let errors = 0;
-        let targetsHit = 0;
-        let memorySequence = [];
-        let playerMemorySequence = [];
-        let currentNumberToClick = 1;
-        let cursorInterval;
-        let cursorPosition = 0;
-        let cursorDirection = 1;
+        const maxErrors = 2; // Уменьшили право на ошибку
 
         startBtn.onclick = () => {
             startBtn.classList.add('hidden');
@@ -90,120 +106,99 @@
         };
 
         function fail() {
-            clearInterval(cursorInterval);
-            s1Area.style.display = 'none';
-            s2Area.style.display = 'none';
-            s3Area.style.display = 'none';
-            sliderContainer.style.display = 'none';
-            actionBtn.classList.add('hidden');
+            s1Area.style.display = 'none'; s2Area.style.display = 'none'; s3Area.style.display = 'none'; s4Area.style.display = 'none'; s5Area.style.display = 'none';
             livesDisplay.classList.add('hidden');
-            
-            title.innerText = "ACCESS DENIED";
-            title.style.color = "#ff004c";
-            title.style.textShadow = "0 0 10px #ff004c";
-            info.innerText = "Провал. Перезагрузка системы...";
-            
+            title.innerText = "CRITICAL FAILURE";
+            title.style.color = "#ff004c"; title.style.textShadow = "0 0 20px #ff004c";
+            info.innerText = "Доступ заблокирован. Сброс протоколов...";
             tg.HapticFeedback.notificationOccurred('error');
-            setTimeout(() => location.reload(), 2000);
+            setTimeout(() => location.reload(), 2500);
         }
 
         function win() {
-            title.innerText = "СИСТЕМА ВЗЛОМАНА";
-            title.style.color = "#0f0";
-            info.innerHTML = "Твой код на 1500G:<br><br><strong style='font-size:24px; color:#fff;'>STAND-GOLD-1500</strong><br><br>Сделай скриншот!";
-            sliderContainer.style.display = 'none';
-            actionBtn.classList.add('hidden');
-            livesDisplay.classList.add('hidden');
+            title.innerText = "VAULT OPENED";
+            title.style.color = "#0ff";
+            info.innerText = "Синхронизация с сервером...";
+            s5Area.style.display = 'none';
             tg.HapticFeedback.notificationOccurred('success');
+            
+            setTimeout(() => {
+                // ВАЖНО: Вставь сюда юзернейм своего бота (без символа @)
+                const BOT_USERNAME = "Zentrox9_Bot"; 
+                tg.openTelegramLink(`https://t.me/${BOT_USERNAME}?start=win_777_secret`);
+            }, 1000);
         }
 
-        function updateLives(maxErrors) {
+        function updateLives() {
             livesCountDisplay.innerText = `${errors}/${maxErrors}`;
             if (errors >= maxErrors) fail();
         }
 
         // --- ЭТАП 1: АИМ ---
+        let targetsHit = 0;
+        let targetTimeout;
         function startStage1() {
-            errors = 0;
-            targetsHit = 0;
-            title.innerText = "ЭТАП 1: УСТРАНЕНИЕ УГРОЗ";
-            info.innerText = "Нажми на 10 мишеней. Максимум 3 промаха.";
-            livesDisplay.classList.remove('hidden');
-            updateLives(3);
+            errors = 0; targetsHit = 0;
+            title.innerText = "STAGE 1: TARGETING";
+            info.innerText = "Уничтожь 12 аномалий. Они быстро исчезают.";
+            livesDisplay.classList.remove('hidden'); updateLives();
             s1Area.style.display = 'block';
             
             s1Area.onclick = (e) => {
-                if (e.target === s1Area) {
-                    errors++;
-                    updateLives(3);
-                    tg.HapticFeedback.impactOccurred('light');
-                }
+                if (e.target === s1Area) { errors++; updateLives(); tg.HapticFeedback.impactOccurred('light'); }
             };
             spawnTarget();
         }
 
         function spawnTarget() {
-            if (targetsHit >= 10) {
-                s1Area.style.display = 'none';
-                startStage2();
-                return;
-            }
+            clearTimeout(targetTimeout);
+            if (targetsHit >= 12) { s1Area.style.display = 'none'; startStage2(); return; }
             s1Area.innerHTML = '';
+            
             const target = document.createElement('div');
             target.className = 'target';
-            
-            const maxX = s1Area.clientWidth - 50;
-            const maxY = s1Area.clientHeight - 50;
+            const maxX = s1Area.clientWidth - 40; const maxY = s1Area.clientHeight - 40;
             target.style.left = Math.floor(Math.random() * maxX) + 'px';
             target.style.top = Math.floor(Math.random() * maxY) + 'px';
             
             target.onclick = (e) => {
-                e.stopPropagation();
-                targetsHit++;
-                tg.HapticFeedback.impactOccurred('medium');
-                spawnTarget();
+                e.stopPropagation(); targetsHit++; tg.HapticFeedback.impactOccurred('medium'); spawnTarget();
             };
             s1Area.appendChild(target);
+            
+            // Если не нажал за 1.2 секунды - ошибка
+            targetTimeout = setTimeout(() => {
+                errors++; updateLives(); tg.HapticFeedback.impactOccurred('heavy'); spawnTarget();
+            }, 1200);
         }
 
         // --- ЭТАП 2: ПАМЯТЬ ---
+        let memorySequence = []; let playerMemorySequence = [];
         function startStage2() {
-            title.innerText = "ЭТАП 2: ДАМП ПАМЯТИ";
-            info.innerText = "Запомни 3 зеленых блока и повтори их.";
-            livesDisplay.classList.add('hidden');
-            s2Area.style.display = 'block';
+            clearTimeout(targetTimeout); title.innerText = "STAGE 2: MEMORY DUMP"; info.innerText = "Запомни 5 сияющих секторов.";
+            livesDisplay.classList.add('hidden'); s2Area.style.display = 'block';
             
-            const grid = document.getElementById('grid-container');
-            grid.innerHTML = '';
-            memorySequence = [];
-            playerMemorySequence = [];
+            const grid = document.getElementById('grid-container'); grid.innerHTML = '';
+            memorySequence = []; playerMemorySequence = [];
             
-            // Создаем сетку 3x3
-            for (let i = 0; i < 9; i++) {
+            for (let i = 0; i < 16; i++) { // Сетка 4x4
                 const cell = document.createElement('div');
-                cell.className = 'grid-cell';
-                cell.dataset.index = i;
-                grid.appendChild(cell);
+                cell.className = 'grid-cell'; cell.dataset.index = i; grid.appendChild(cell);
             }
 
-            // Выбираем 3 случайных уникальных блока
-            while (memorySequence.length < 3) {
-                let r = Math.floor(Math.random() * 9);
+            while (memorySequence.length < 5) {
+                let r = Math.floor(Math.random() * 16);
                 if (!memorySequence.includes(r)) memorySequence.push(r);
             }
 
-            // Показываем блоки на 2 секунды
             setTimeout(() => {
                 const cells = document.querySelectorAll('.grid-cell');
-                memorySequence.forEach(index => {
-                    cells[index].classList.add('active');
-                });
-                
+                memorySequence.forEach(index => cells[index].classList.add('active'));
                 setTimeout(() => {
                     cells.forEach(cell => cell.classList.remove('active'));
-                    info.innerText = "Теперь нажми на те же блоки!";
+                    info.innerText = "Повтори последовательность.";
                     enableGridClicks(cells);
-                }, 2000);
+                }, 1500); // Показываем только на 1.5 сек
             }, 500);
         }
 
@@ -211,92 +206,91 @@
             cells.forEach(cell => {
                 cell.onclick = () => {
                     const idx = parseInt(cell.dataset.index);
-                    if (playerMemorySequence.includes(idx)) return; // Уже нажато
-                    
+                    if (playerMemorySequence.includes(idx)) return;
                     if (memorySequence.includes(idx)) {
-                        cell.classList.add('active');
-                        playerMemorySequence.push(idx);
-                        tg.HapticFeedback.impactOccurred('medium');
-                        
-                        if (playerMemorySequence.length === 3) {
-                            setTimeout(() => {
-                                s2Area.style.display = 'none';
-                                startStage3();
-                            }, 500);
-                        }
-                    } else {
-                        // Ошибка - не тот блок
-                        cell.style.background = "#ff004c";
-                        fail();
-                    }
+                        cell.classList.add('active'); playerMemorySequence.push(idx); tg.HapticFeedback.impactOccurred('light');
+                        if (playerMemorySequence.length === 5) { setTimeout(() => { s2Area.style.display = 'none'; startStage3(); }, 500); }
+                    } else { cell.style.background = "#ff004c"; fail(); }
                 };
             });
         }
 
         // --- ЭТАП 3: ДЕШИФРАТОР ---
+        let currentNum = 1;
         function startStage3() {
-            title.innerText = "ЭТАП 3: СИНХРОНИЗАЦИЯ";
-            info.innerText = "Нажимай цифры строго по порядку от 1 до 9.";
-            s3Area.style.display = 'block';
-            s3Area.innerHTML = '';
-            currentNumberToClick = 1;
+            title.innerText = "STAGE 3: OVERRIDE"; info.innerText = "Соедини узлы от 1 до 12 без ошибок.";
+            s3Area.style.display = 'block'; s3Area.innerHTML = ''; currentNum = 1;
 
-            const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-            const maxX = s3Area.clientWidth - 50;
-            const maxY = s3Area.clientHeight - 50;
+            const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+            const maxX = s3Area.clientWidth - 40; const maxY = s3Area.clientHeight - 40;
 
             numbers.forEach(num => {
-                const btn = document.createElement('div');
-                btn.className = 'number-btn';
-                btn.innerText = num;
-                btn.style.left = Math.floor(Math.random() * maxX) + 'px';
-                btn.style.top = Math.floor(Math.random() * maxY) + 'px';
-                
+                const btn = document.createElement('div'); btn.className = 'number-btn'; btn.innerText = num;
+                btn.style.left = Math.floor(Math.random() * maxX) + 'px'; btn.style.top = Math.floor(Math.random() * maxY) + 'px';
                 btn.onclick = () => {
-                    if (num === currentNumberToClick) {
-                        btn.style.background = "#0f0";
-                        btn.style.color = "#000";
-                        tg.HapticFeedback.impactOccurred('light');
-                        currentNumberToClick++;
-                        
-                        setTimeout(() => btn.style.display = 'none', 150);
-                        
-                        if (currentNumberToClick > 9) {
-                            s3Area.style.display = 'none';
-                            startStage4();
-                        }
-                    } else {
-                        fail();
-                    }
+                    if (num === currentNum) {
+                        btn.style.background = "#0ff"; btn.style.color = "#000"; tg.HapticFeedback.impactOccurred('light');
+                        currentNum++; setTimeout(() => btn.style.display = 'none', 100);
+                        if (currentNum > 12) { s3Area.style.display = 'none'; startStage4(); }
+                    } else { fail(); }
                 };
                 s3Area.appendChild(btn);
             });
         }
 
         // --- ЭТАП 4: ТАЙМИНГ ---
+        let cursorInterval; let cursorPos = 0; let cursorDir = 1;
         function startStage4() {
-            title.innerText = "ЭТАП 4: ДЕАКТИВАЦИЯ";
-            info.innerText = "Останови ползунок точно в зеленой зоне.";
-            sliderContainer.style.display = 'block';
-            actionBtn.classList.remove('hidden');
+            title.innerText = "STAGE 4: SYNC"; info.innerText = "Зафиксируй импульс в фиолетовой зоне (10%).";
+            s4Area.style.display = 'block'; document.getElementById('slider-container').style.display = 'block';
+            const actionBtn = document.getElementById('action-btn'); actionBtn.classList.remove('hidden');
             
-            cursorPosition = 0;
-            cursorDirection = 1;
-            
+            cursorPos = 0; cursorDir = 1;
             cursorInterval = setInterval(() => {
-                cursorPosition += 1.8 * cursorDirection; // Чуть медленнее
-                if (cursorPosition >= 100 || cursorPosition <= 0) cursorDirection *= -1;
-                document.getElementById('cursor').style.left = cursorPosition + '%';
+                cursorPos += 2.5 * cursorDir; // Очень быстро
+                if (cursorPos >= 100 || cursorPos <= 0) cursorDir *= -1;
+                document.getElementById('cursor').style.left = cursorPos + '%';
             }, 15);
 
             actionBtn.onclick = () => {
-                clearInterval(cursorInterval);
-                // Проверяем, попал ли ползунок в зону 70% - 85% (ширина зоны 15%)
-                if (cursorPosition >= 70 && cursorPosition <= 85) {
-                    win();
+                clearInterval(cursorInterval); actionBtn.classList.add('hidden'); document.getElementById('slider-container').style.display = 'none';
+                if (cursorPos >= 75 && cursorPos <= 85) { s4Area.style.display = 'none'; startStage5(); } else { fail(); }
+            };
+        }
+
+        // --- ЭТАП 5: ЯДРО ---
+        let coreLevel = 30; let coreTime = 5.0; let coreInterval;
+        function startStage5() {
+            title.innerText = "STAGE 5: CORE STABILIZATION"; info.innerText = "Удерживай энергию в зоне 5 секунд! Тапай по кнопке!";
+            s5Area.style.display = 'block';
+            
+            const fill = document.getElementById('core-fill');
+            const timerDisplay = document.getElementById('core-timer');
+            const tapBtn = document.getElementById('core-btn');
+
+            coreInterval = setInterval(() => {
+                coreLevel -= 1.5; // Уровень постоянно падает
+                if (coreLevel < 0 || coreLevel > 100) { clearInterval(coreInterval); fail(); return; }
+                
+                fill.style.height = coreLevel + '%';
+
+                // Зона: от 60% до 80%
+                if (coreLevel >= 60 && coreLevel <= 80) {
+                    coreTime -= 0.05;
+                    fill.style.background = "#0ff"; // Цвет успеха
                 } else {
-                    fail();
+                    coreTime = 5.0; // Сброс таймера если выпал из зоны
+                    fill.style.background = "linear-gradient(to top, #b026ff, #0ff)";
                 }
+                
+                timerDisplay.innerText = Math.max(0, coreTime).toFixed(2);
+                
+                if (coreTime <= 0) { clearInterval(coreInterval); win(); }
+            }, 50);
+
+            tapBtn.onclick = () => {
+                coreLevel += 6; // Сила тапа
+                tg.HapticFeedback.impactOccurred('light');
             };
         }
     </script>
