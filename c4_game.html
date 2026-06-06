@@ -295,9 +295,9 @@
         }
 
         const stageConfigs = {
-            1: { title: "ЭТАП 1: РЕФЛЕКСЫ", desc: "Уничтожь 12 мишеней. У тебя всего 0.7 секунд на каждую! Максимум 2 ошибки." },
-            2: { title: "ЭТАП 2: ДАМП ПАМЯТИ", desc: "Запомни 5 золотых секторов. Время на запоминание: 0.5 секунд." },
-            3: { title: "ЭТАП 3: ДЕШИФРАТОР", desc: "Нажимай цифры строго от 1 до 12. Лимит времени - 15 секунд." },
+            1: { title: "ЭТАП 1: РЕФЛЕКСЫ", desc: "Уничтожь 12 мишеней. У тебя всего 0.6 секунд на каждую! Максимум 2 ошибки." },
+            2: { title: "ЭТАП 2: ДАМП ПАМЯТИ", desc: "Запомни 5 золотых секторов. Время на запоминание: 0.3 секунд." },
+            3: { title: "ЭТАП 3: ДЕШИФРАТОР", desc: "Нажимай цифры строго от 1 до 12. Лимит времени - 12 секунд." },
             4: { title: "ЭТАП 4: СИНХРОНИЗАЦИЯ", desc: "Останови ядро точно в золотой зоне." },
             5: { title: "ЭТАП 5: ФОКУС", desc: "Собери 5 золотых сфер. Игнорируй красные обманки." },
             6: { title: "ФИНАЛ: КОНТРОЛЬ", desc: "Зажми кольцо. Если система загорится КРАСНЫМ - немедленно отпусти палец!" }
@@ -382,7 +382,7 @@
             };
             ui.areas[1].appendChild(target);
 
-            // Таймер 0.7 секунд на реакцию
+            // Таймер 0.6 секунд на реакцию
             s1Timeout = setTimeout(() => {
                 mistakes++;
                 ui.mistakesUI.innerText = `Ошибки: ${mistakes}/2`;
@@ -392,10 +392,10 @@
                 } else {
                     spawnTarget();
                 }
-            }, 700);
+            }, 600);
         }
 
-        // --- ЭТАП 2: Запоминание 0.5 сек ---
+        // --- ЭТАП 2: Запоминание 0.3 сек ---
         let memorySeq = [], playerSeq = [];
         function startStage2() {
             ui.areas[2].style.display = 'block';
@@ -410,7 +410,7 @@
                 grid.appendChild(cell);
             }
 
-            while (memorySeq.length < 5) {
+            while (memorySeq.length < 3) {
                 let r = Math.floor(Math.random() * 16);
                 if (!memorySeq.includes(r)) memorySeq.push(r);
             }
@@ -420,12 +420,12 @@
                 memorySeq.forEach(idx => cells[idx].classList.add('active'));
                 tg.HapticFeedback.impactOccurred('medium');
                 
-                // Изменено на 500 мс
+                // Изменено на 300 мс
                 setTimeout(() => {
                     cells.forEach(c => c.classList.remove('active'));
                     enableGridClicks(cells);
-                }, 500); 
-            }, 500);
+                }, 300); 
+            }, 300);
         }
 
         function enableGridClicks(cells) {
@@ -447,9 +447,9 @@
             });
         }
 
-        // --- ЭТАП 3: Лимит 15 секунд ---
+        // --- ЭТАП 3: Лимит 12 секунд ---
         let currentNum = 1;
-        let s3TimeLeft = 15;
+        let s3TimeLeft = 12;
         
         function startStage3() {
             ui.areas[3].style.display = 'block';
@@ -459,10 +459,10 @@
                 if(child.id !== 's3-timer-display') child.remove();
             });
             
-            ui.s3TimerDisplay.innerText = "00:15";
+            ui.s3TimerDisplay.innerText = "00:12";
             ui.s3TimerDisplay.classList.remove('hidden');
             currentNum = 1;
-            s3TimeLeft = 15;
+            s3TimeLeft = 12;
             
             const positions = [];
             const size = 60; 
