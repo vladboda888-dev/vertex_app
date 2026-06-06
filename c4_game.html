@@ -346,9 +346,9 @@
         }
 
         const stageConfigs = {
-            1: { title: "ЭТАП 1: РЕФЛЕКСЫ", desc: "Уничтожь 12 мишеней. У тебя всего 0.6 секунд на каждую! Максимум 2 ошибки." },
-            2: { title: "ЭТАП 2: ДАМП ПАМЯТИ", desc: "Запомни 6 золотых секторов. Время на запоминание: 0.25 секунд." },
-            3: { title: "ЭТАП 3: ДЕШИФРАТОР", desc: "Нажимай цифры от 1 до 12. Жесткий лимит - 10 секунд." },
+            1: { title: "ЭТАП 1: РЕФЛЕКСЫ", desc: "Уничтожь 12 мишеней. У тебя всего 0.5 секунд на каждую! Максимум 2 ошибки." },
+            2: { title: "ЭТАП 2: ДАМП ПАМЯТИ", desc: "Запомни 6 золотых секторов. Время на запоминание: 0.1 секунд." },
+            3: { title: "ЭТАП 3: ДЕШИФРАТОР", desc: "Нажимай цифры от 1 до 12. Жесткий лимит - 9 секунд." },
             4: { title: "ЭТАП 4: СИНХРОНИЗАЦИЯ", desc: "Останови ядро точно в золотой зоне." },
             5: { title: "ЭТАП 5: ФОКУС", desc: "Собери 5 золотых сфер за 8 секунд. Игнорируй красные обманки." },
             6: { title: "ФИНАЛ: КОНТРОЛЬ", desc: "Зажми кольцо. Если система загорится КРАСНЫМ - немедленно отпусти палец!" }
@@ -444,10 +444,10 @@
                 } else {
                     spawnTarget();
                 }
-            }, 600);
+            }, 500);
         }
 
-        // --- ЭТАП 2: Запоминание 6 блоков, 0.25 сек ---
+        // --- ЭТАП 2: Запоминание 6 блоков, 0.1 сек ---
         let memorySeq = [], playerSeq = [];
         function startStage2() {
             ui.areas[2].style.display = 'block';
@@ -473,11 +473,11 @@
                 memorySeq.forEach(idx => cells[idx].classList.add('active'));
                 tg.HapticFeedback.impactOccurred('heavy');
                 
-                // Изменено на 250 мс
+                // Изменено на 100 мс
                 setTimeout(() => {
                     cells.forEach(c => c.classList.remove('active'));
                     enableGridClicks(cells);
-                }, 250); 
+                }, 100); 
             }, 400);
         }
 
@@ -500,9 +500,9 @@
             });
         }
 
-        // --- ЭТАП 3: Лимит 10 секунд ---
+        // --- ЭТАП 3: Лимит 9 секунд ---
         let currentNum = 1;
-        let s3TimeLeft = 10;
+        let s3TimeLeft = 9;
         
         function startStage3() {
             ui.areas[3].style.display = 'block';
@@ -511,10 +511,10 @@
                 if(child.id !== 's3-timer-display') child.remove();
             });
             
-            ui.s3TimerDisplay.innerText = "00:10";
+            ui.s3TimerDisplay.innerText = "00:09";
             ui.s3TimerDisplay.classList.remove('hidden');
             currentNum = 1;
-            s3TimeLeft = 10;
+            s3TimeLeft = 19;
             
             const positions = [];
             const size = 55; 
@@ -564,12 +564,12 @@
 
             s3TimerInterval = setInterval(() => {
                 s3TimeLeft--;
-                ui.s3TimerDisplay.innerText = `00:${s3TimeLeft < 10 ? '0' + s3TimeLeft : s3TimeLeft}`;
+                ui.s3TimerDisplay.innerText = `00:${s3TimeLeft < 9 ? '0' + s3TimeLeft : s3TimeLeft}`;
                 if (s3TimeLeft <= 0) {
                     clearInterval(s3TimerInterval);
                     triggerFail();
                 }
-            }, 1000);
+            }, 900);
         }
 
         // --- ЭТАП 4 ---
