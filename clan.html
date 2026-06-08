@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Divo eSports App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        /* Ультра-премиальный дизайн: Divo eSports Theme */
+        :root {
+            --bg-deep: #030305;
+            --glass-bg: rgba(255, 255, 255, 0.02);
+            --glass-border: rgba(255, 255, 255, 0.04);
+            --divo-gold: #D4AF37;
+            --divo-cyan: #00F3FF;
+            --text-main: #FFFFFF;
+            --text-muted: #6B6B7B;
+            --btn-red: #FF2A55;
+            --btn-green: #00FF88;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Montserrat', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            overflow-x: hidden;
+            padding-bottom: 90px;
+        }
+
+        ::-webkit-scrollbar { display: none; }
+
+        /* Шапка */
+        .app-header {
+            padding: 25px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(180deg, rgba(3, 3, 5, 0.95) 0%, transparent 100%);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .clan-logo {
+            font-size: 24px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            background: linear-gradient(90deg, var(--divo-gold), #FFF8DC);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(212, 175, 55, 0.3);
+        }
+
+        .role-badge {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 6px 12px;
+            border-radius: 20px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--divo-cyan);
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.1);
+        }
+
+        .container { padding: 0 20px; }
+
+        h2 {
+            font-size: 16px;
+            font-weight: 700;
+            margin: 30px 0 15px;
+            color: var(--text-main);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* Премиум Карточки */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: transform 0.3s ease;
+        }
+
+        /* Пустые состояния (Empty States) */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 500;
+            background: rgba(0,0,0,0.2);
+            border-radius: 16px;
+            border: 1px dashed var(--glass-border);
+        }
+
+        /* Тактическая доска */
+        .map-select {
+            width: 100%;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.6);
+            color: var(--divo-cyan);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            margin-bottom: 15px;
+            outline: none;
+            font-size: 14px;
+            font-weight: 700;
+            appearance: none;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .canvas-container {
+            width: 100%;
+            height: 250px;
+            background-color: #050508;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            margin-bottom: 15px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.8);
+        }
+        
+        canvas { 
+            width: 100%; 
+            height: 100%; 
+            touch-action: none; 
+            background-position: center;
+            background-size: cover;
+            background-repeat: no-repeat;
+        }
+
+        /* Кнопки */
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 700;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: 0.2s ease;
+            color: var(--text-main);
+            margin-bottom: 10px;
+        }
+
+        .btn-primary { 
+            background: rgba(212, 175, 55, 0.1); 
+            border: 1px solid rgba(212, 175, 55, 0.3); 
+            color: var(--divo-gold); 
+        }
+        .btn-danger { 
+            background: rgba(255, 42, 85, 0.1); 
+            border: 1px solid rgba(255, 42, 85, 0.3); 
+            color: var(--btn-red); 
+        }
+
+        .btn:active { transform: scale(0.97); }
+
+        /* Финансы */
+        .balance-card {
+            text-align: center;
+            padding: 40px 20px;
+            background: radial-gradient(circle at center, rgba(212, 175, 55, 0.1) 0%, transparent 70%);
+        }
+        .balance-sum {
+            font-size: 48px;
+            font-weight: 900;
+            color: var(--divo-gold);
+            text-shadow: 0 0 30px rgba(212, 175, 55, 0.4);
+            margin-top: 5px;
+        }
+
+        /* Профиль */
+        .profile-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .strikes-box { display: flex; gap: 8px; margin-top: 8px; }
+        .strike-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+        }
+        .strike-dot.active { background: var(--btn-red); box-shadow: 0 0 15px var(--btn-red); border: none; }
+
+        /* Навигация */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            height: 80px;
+            background: rgba(3, 3, 5, 0.9);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .nav-item {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            transition: 0.3s ease;
+        }
+
+        .nav-icon { font-size: 20px; filter: grayscale(100%) opacity(0.5); transition: 0.3s ease; }
+        .nav-item.active { color: var(--divo-cyan); }
+        .nav-item.active .nav-icon {
+            filter: grayscale(0%) opacity(1);
+            text-shadow: 0 0 15px rgba(0, 243, 255, 0.5);
+            transform: translateY(-3px);
+        }
+
+        .tab-content { display: none; animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <header class="app-header">
+        <div class="clan-logo">DIVO</div>
+        <div class="role-badge" id="ui-role">Загрузка...</div>
+    </header>
+
+    <div class="container">
+        
+        <!-- Вкладка: ОЖИДАНИЕ (ГОСТЬ) -->
+        <div id="tab-guest" class="tab-content active">
+            <div class="empty-state" style="margin-top: 50px; border: none; background: transparent;">
+                <div style="font-size: 40px; margin-bottom: 20px;">🛡️</div>
+                <h3 style="color: var(--divo-gold); font-size: 18px; margin-bottom: 10px;">ДОСТУП ЗАКРЫТ</h3>
+                <p>Вы находитесь в статусе гостя.<br>Ожидайте выдачи прав руководством Divo eSports.</p>
+            </div>
+        </div>
+
+        <!-- Вкладка: ГРАФИК -->
+        <div id="tab-schedule" class="tab-content">
+            <h2>Расписание матчей</h2>
+            <div id="schedule-container">
+                <!-- Здесь будут создаваться матчи. Пока пусто. -->
+                <div class="empty-state">Нет запланированных матчей на этой неделе</div>
+            </div>
+
+            <h2>Активные задания</h2>
+            <div id="tasks-container">
+                <!-- Здесь будут задания. Пока пусто. -->
+                <div class="empty-state">Нет активных заданий от Капитана</div>
+            </div>
+        </div>
+
+        <!-- Вкладка: ДОСКА -->
+        <div id="tab-board" class="tab-content">
+            <h2>Тактика</h2>
+            <div class="glass-card" style="padding: 15px;">
+                <select class="map-select" id="map-select" onchange="changeMap()">
+                    <option value="none" disabled selected>-- Выберите карту --</option>
+                    <option value="sandstone">Sandstone</option>
+                    <option value="province">Province</option>
+                    <option value="rust">Rust</option>
+                    <option value="sakura">Sakura</option>
+                    <option value="zone9">Zone 9</option>
+                    <option value="breeze">Breeze</option>
+                    <option value="dune">Dune</option>
+                </select>
+                <div class="canvas-container">
+                    <canvas id="tactic-canvas"></canvas>
+                </div>
+                <button class="btn btn-danger" style="margin-bottom: 0;" onclick="clearBoard()">Очистить рисунок</button>
+            </div>
+        </div>
+
+        <!-- Вкладка: ПРОФИЛЬ -->
+        <div id="tab-profile" class="tab-content">
+            <h2>Профиль игрока</h2>
+            <div class="glass-card profile-header">
+                <div>
+                    <div style="font-size: 16px; font-weight: 700;">Статус профиля</div>
+                    <div style="font-size: 12px; color: var(--divo-cyan); margin-top: 5px; font-weight: 700;">MVP: 0 PTS</div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 9px; font-weight: 700; color: var(--text-muted); letter-spacing: 1px;">СТРАЙКИ</div>
+                    <div class="strikes-box">
+                        <div class="strike-dot"></div>
+                        <div class="strike-dot"></div>
+                        <div class="strike-dot"></div>
+                    </div>
+                </div>
+            </div>
+
+            <h2>Зал славы DIVO</h2>
+            <div class="glass-card">
+                <div class="empty-state" style="padding: 20px;">Рейтинг формируется...</div>
+            </div>
+        </div>
+
+        <!-- Вкладка: ФИНАНСЫ -->
+        <div id="tab-finance" class="tab-content">
+            <div class="glass-card balance-card">
+                <div style="font-size: 12px; color: var(--text-muted); letter-spacing: 2px; font-weight: 700;">БЮДЖЕТ КЛАНА</div>
+                <div class="balance-sum">0 ₽</div>
+            </div>
+            
+            <h2>История транзакций</h2>
+            <div id="finance-history">
+                <div class="empty-state">Казна пуста. История операций отсутствует.</div>
+            </div>
+        </div>
+
+        <!-- Вкладка: ПАНЕЛЬ СОЗДАТЕЛЯ / КЭПА -->
+        <div id="tab-admin" class="tab-content">
+            <h2 style="color: var(--divo-gold);">Управление Divo eSports</h2>
+            
+            <div class="glass-card">
+                <h3 style="font-size: 12px; color: var(--text-muted); margin-bottom: 15px; text-transform: uppercase;">Заявки на вступление</h3>
+                <div class="empty-state" style="padding: 15px; margin-bottom: 15px;">Нет новых заявок</div>
+            </div>
+
+            <div class="glass-card">
+                <h3 style="font-size: 12px; color: var(--text-muted); margin-bottom: 15px; text-transform: uppercase;">Контроль клана</h3>
+                <button class="btn btn-primary" onclick="sendAction('create_event', null)">Создать матч / Прак</button>
+                <button class="btn btn-primary" onclick="sendAction('create_task', null)">Выдать задание</button>
+                <button class="btn btn-danger" style="margin-bottom: 0;" onclick="sendAction('give_strike', null)">Управление страйками</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Навигация -->
+    <nav class="bottom-nav" id="main-nav" style="display: none;">
+        <button class="nav-item active" onclick="openTab('tab-schedule', this)">
+            <span class="nav-icon">📅</span>
+            <span>График</span>
+        </button>
+        <button class="nav-item" onclick="openTab('tab-board', this)">
+            <span class="nav-icon">🗺️</span>
+            <span>Доска</span>
+        </button>
+        <button class="nav-item" onclick="openTab('tab-profile', this)">
+            <span class="nav-icon">🛡️</span>
+            <span>Профиль</span>
+        </button>
+        <button class="nav-item" onclick="openTab('tab-finance', this)">
+            <span class="nav-icon">💎</span>
+            <span>Казна</span>
+        </button>
+        <button class="nav-item" id="nav-admin" style="display: none;" onclick="openTab('tab-admin', this)">
+            <span class="nav-icon">⚙️</span>
+            <span>Панель</span>
+        </button>
+    </nav>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.ready();
+
+        // Читаем роль из ссылки бота (если запущен не в ТГ, по умолчанию guest)
+        const urlParams = new URLSearchParams(window.location.search);
+        let currentUserRole = urlParams.get('role') || 'guest';
+
+        function initApp() {
+            const uiRole = document.getElementById('ui-role');
+            const nav = document.getElementById('main-nav');
+            const navAdmin = document.getElementById('nav-admin');
+
+            if (currentUserRole === 'guest') {
+                uiRole.innerText = 'ГОСТЬ';
+                uiRole.style.color = '#6B6B7B';
+                openTab('tab-guest', null);
+            } else {
+                nav.style.display = 'flex';
+                
+                if (currentUserRole === 'player') {
+                    uiRole.innerText = 'ИГРОК';
+                    openTab('tab-schedule', document.querySelectorAll('.nav-item')[0]);
+                } 
+                else if (currentUserRole === 'captain' || currentUserRole === 'creator') {
+                    uiRole.innerText = currentUserRole === 'creator' ? 'СОЗДАТЕЛЬ' : 'КАПИТАН';
+                    uiRole.style.color = 'var(--divo-gold)';
+                    navAdmin.style.display = 'flex'; // Показываем админку
+                    openTab('tab-schedule', document.querySelectorAll('.nav-item')[0]);
+                }
+            }
+        }
+
+        function openTab(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            
+            if (btn) {
+                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+                btn.classList.add('active');
+                tg.HapticFeedback.selectionChanged();
+            }
+        }
+
+        function sendAction(actionType, payload) {
+            tg.HapticFeedback.impactOccurred('medium');
+            const dataStr = JSON.stringify({ action: actionType, data: payload });
+            tg.sendData(dataStr); // Отправляем команду в Python
+        }
+
+        /* ================= ТАКТИЧЕСКАЯ ДОСКА И ФОНЫ КАРТ ================= */
+        const canvas = document.getElementById('tactic-canvas');
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+
+        function resizeCanvas() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // ⚠️ ИНСТРУКЦИЯ ПО КАРТАМ ⚠️
+        // Сюда вставляй прямые ссылки на картинки карт (с окончанием .jpg или .png)
+        // Картинки можно загрузить на тот же GitHub в папку и указать ссылки на них.
+        const mapBackgrounds = {
+            'sandstone': 'sandstone.png',
+            'province': 'https://ссылка-на-твою-картинку-province.jpg',
+            'rust': 'https://ссылка-на-твою-картинку-rust.jpg',
+            'sakura': 'https://ссылка-на-твою-картинку-sakura.jpg',
+            'zone9': 'https://ссылка-на-твою-картинку-zone9.jpg',
+            'breeze': 'https://ссылка-на-твою-картинку-breeze.jpg',
+            'dune': 'https://ссылка-на-твою-картинку-dune.jpg'
+        };
+
+        function changeMap() {
+            tg.HapticFeedback.selectionChanged();
+            const selectedMap = document.getElementById('map-select').value;
+            
+            // Если ссылка для выбранной карты существует, ставим ее на фон
+            if (mapBackgrounds[selectedMap]) {
+                canvas.style.backgroundImage = `url('${mapBackgrounds[selectedMap]}')`;
+            } else {
+                // Если ссылки нет, фон будет просто черным
+                canvas.style.backgroundImage = 'none';
+            }
+            clearBoard(); // Очищаем старые рисунки при смене карты
+        }
+
+        function getMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            let clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            let clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return { x: clientX - rect.left, y: clientY - rect.top };
+        }
+
+        function startPosition(e) { e.preventDefault(); isDrawing = true; draw(e); }
+        function endPosition() { isDrawing = false; ctx.beginPath(); }
+        function draw(e) {
+            if (!isDrawing) return;
+            e.preventDefault();
+            const pos = getMousePos(e);
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = '#00F3FF'; // Цвет маркера (Неоновый голубой)
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#00F3FF';
+            
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
+        }
+
+        canvas.addEventListener('mousedown', startPosition);
+        canvas.addEventListener('mouseup', endPosition);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('touchstart', startPosition);
+        canvas.addEventListener('touchend', endPosition);
+        canvas.addEventListener('touchmove', draw);
+
+        function clearBoard() {
+            tg.HapticFeedback.impactOccurred('rigid');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        initApp();
+    </script>
+</body>
+</html>
