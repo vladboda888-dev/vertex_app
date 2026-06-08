@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Zentrox Clan App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        /* --- Премиальная цветовая палитра и переменные --- */
+        :root {
+            --bg-dark: #07070a;
+            --glass-bg: rgba(20, 20, 25, 0.4);
+            --glass-border: rgba(255, 255, 255, 0.05);
+            --accent-neon: #00f3ff;
+            --accent-purple: #8a2be2;
+            --text-main: #ffffff;
+            --text-dim: #8b8b99;
+            --btn-green: rgba(0, 255, 136, 0.15);
+            --btn-green-border: rgba(0, 255, 136, 0.4);
+            --btn-red: rgba(255, 42, 85, 0.15);
+            --btn-red-border: rgba(255, 42, 85, 0.4);
+            --btn-yellow: rgba(255, 192, 0, 0.15);
+            --btn-yellow-border: rgba(255, 192, 0, 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Montserrat', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            overflow-x: hidden;
+            padding-bottom: 90px;
+        }
+
+        /* Скрываем скроллбар */
+        ::-webkit-scrollbar { display: none; }
+
+        /* --- Шапка --- */
+        .app-header {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(180deg, rgba(7, 7, 10, 0.9) 0%, transparent 100%);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .clan-name {
+            font-size: 22px;
+            font-weight: 800;
+            background: linear-gradient(90deg, var(--accent-neon), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .role-badge {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            padding: 5px 10px;
+            border-radius: 8px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-dim);
+        }
+
+        .container { padding: 0 20px; }
+
+        h2 {
+            font-size: 18px;
+            font-weight: 800;
+            margin: 25px 0 15px;
+            color: var(--text-main);
+            letter-spacing: 0.5px;
+        }
+
+        /* --- Glassmorphism Карточки --- */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 18px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        /* --- Экран блокировки (Гость) --- */
+        .guest-lock {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 60vh;
+            text-align: center;
+        }
+
+        .guest-lock h3 {
+            color: var(--accent-neon);
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+
+        .guest-lock p {
+            color: var(--text-dim);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* --- Расписание --- */
+        .schedule-scroll {
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            padding-bottom: 10px;
+        }
+
+        .event-card {
+            min-width: 290px;
+            scroll-snap-align: center;
+            flex-shrink: 0;
+        }
+
+        .event-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .tag {
+            font-size: 10px;
+            font-weight: 800;
+            padding: 4px 8px;
+            border-radius: 6px;
+            text-transform: uppercase;
+        }
+        .tag-prak { background: rgba(138, 43, 226, 0.2); color: #c084fc; border: 1px solid rgba(138, 43, 226, 0.4); }
+        .tag-tour { background: rgba(0, 243, 255, 0.2); color: var(--accent-neon); border: 1px solid rgba(0, 243, 255, 0.4); }
+        
+        .roster { font-size: 12px; color: var(--text-dim); font-weight: 600; }
+
+        .event-title { font-size: 18px; font-weight: 800; margin-bottom: 5px; }
+        .event-time { font-size: 13px; color: var(--text-main); margin-bottom: 15px; }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+            margin-bottom: 8px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-purple), var(--accent-neon));
+            width: 80%; /* Пример: 4 из 5 */
+        }
+        .progress-text { font-size: 11px; color: var(--text-dim); text-align: right; margin-bottom: 15px;}
+
+        /* --- Кнопки --- */
+        .btn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .btn-full { grid-column: span 2; }
+
+        .btn {
+            padding: 12px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.2s ease;
+            text-align: center;
+            color: var(--text-main);
+        }
+
+        .btn-yes { background: var(--btn-green); border: 1px solid var(--btn-green-border); color: #00ff88; }
+        .btn-no { background: var(--btn-red); border: 1px solid var(--btn-red-border); color: #ff2a55; }
+        .btn-late { background: var(--btn-yellow); border: 1px solid var(--btn-yellow-border); color: #ffc000; }
+        .btn-primary { background: var(--accent-purple); color: white; border: none; box-shadow: 0 0 15px rgba(138, 43, 226, 0.4); }
+        
+        .btn:active { transform: scale(0.95); }
+
+        /* --- Задания --- */
+        .task-list { display: flex; flex-direction: column; gap: 10px; }
+        .task-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .task-item:last-child { border-bottom: none; padding-bottom: 0; }
+        
+        /* --- Тактическая доска --- */
+        .map-select {
+            width: 100%;
+            padding: 14px;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            margin-bottom: 15px;
+            outline: none;
+            font-size: 14px;
+            appearance: none;
+            font-weight: 600;
+        }
+        
+        .canvas-container {
+            width: 100%;
+            height: 240px;
+            background: #0a0a0c;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            margin-bottom: 15px;
+            position: relative;
+        }
+        canvas { width: 100%; height: 100%; touch-action: none; }
+
+        /* --- Профиль и Страйки --- */
+        .profile-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .strikes-box { display: flex; gap: 6px; margin-top: 5px; }
+        .strike-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--glass-border);
+        }
+        .strike-dot.active { background: #ff2a55; box-shadow: 0 0 10px #ff2a55; border: none; }
+
+        /* --- Финансы --- */
+        .finance-card { text-align: center; padding: 30px 20px; }
+        .balance-title { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+        .balance-sum {
+            font-size: 36px;
+            font-weight: 800;
+            color: var(--accent-neon);
+            margin-top: 10px;
+            text-shadow: 0 0 20px rgba(0, 243, 255, 0.4);
+        }
+
+        /* --- Навигация --- */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            height: 80px;
+            background: rgba(7, 7, 10, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .nav-item {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            font-size: 10px;
+            font-weight: 600;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: 0.3s ease;
+        }
+
+        .nav-icon { font-size: 22px; }
+        .nav-item.active { color: var(--accent-neon); }
+        .nav-item.active .nav-icon {
+            text-shadow: 0 0 15px rgba(0, 243, 255, 0.5);
+            transform: translateY(-2px);
+        }
+
+        /* Вкладки */
+        .tab-content { display: none; animation: fadeIn 0.3s ease; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Панель Капитана */
+        #tab-admin { display: none; }
+    </style>
+</head>
+<body>
+
+    <header class="app-header">
+        <div class="clan-name">ZENTROX</div>
+        <div class="role-badge" id="ui-role">Загрузка...</div>
+    </header>
+
+    <div class="container">
+        
+        <div id="tab-guest" class="tab-content active">
+            <div class="glass-card guest-lock">
+                <h3>Доступ закрыт</h3>
+                <p>Вы числитесь как Гость.<br>Ожидайте, пока Капитан проверит вашу заявку и выдаст роль Игрока.</p>
+            </div>
+        </div>
+
+        <div id="tab-schedule" class="tab-content">
+            <h2>График недели</h2>
+            <div class="schedule-scroll">
+                
+                <div class="glass-card event-card">
+                    <div class="event-header">
+                        <span class="tag tag-prak">Прак</span>
+                        <span class="roster">Main Состав</span>
+                    </div>
+                    <div class="event-title">vs Horizon Esports</div>
+                    <div class="event-time">Сегодня, 20:00 - Sandstone</div>
+                    
+                    <div class="progress-bar"><div class="progress-fill"></div></div>
+                    <div class="progress-text">Готовы: 4/5</div>
+
+                    <div class="btn-grid">
+                        <button class="btn btn-yes" onclick="sendAction('status_yes', 1)">Буду</button>
+                        <button class="btn btn-no" onclick="sendAction('status_no', 1)">Не буду</button>
+                        <button class="btn btn-late btn-full" onclick="sendAction('status_late', 1)">Опоздаю на 10 мин</button>
+                    </div>
+                </div>
+
+                <div class="glass-card event-card">
+                    <div class="event-header">
+                        <span class="tag tag-tour">Турнир</span>
+                        <span class="roster">Main + Academy</span>
+                    </div>
+                    <div class="event-title">Standoff 2 FastCup</div>
+                    <div class="event-time">Завтра, 18:30 - BO3</div>
+                    
+                    <div class="progress-bar"><div class="progress-fill" style="width: 20%;"></div></div>
+                    <div class="progress-text">Готовы: 1/5</div>
+
+                    <div class="btn-grid">
+                        <button class="btn btn-yes" onclick="sendAction('status_yes', 2)">Буду</button>
+                        <button class="btn btn-no" onclick="sendAction('status_no', 2)">Не буду</button>
+                    </div>
+                </div>
+            </div>
+
+            <h2>Задания (Ежедневные/Еженедельные)</h2>
+            <div class="glass-card task-list">
+                <div class="task-item">
+                    <div>
+                        <div style="font-weight: 800; font-size: 14px;">500 киллов на DM</div>
+                        <div style="font-size: 11px; color: var(--text-dim); margin-top: 4px;">Ежедневное</div>
+                    </div>
+                    <button class="btn btn-primary" style="padding: 8px 16px;" onclick="sendAction('task_done', 'dm_500')">Сдал</button>
+                </div>
+                <div class="task-item">
+                    <div>
+                        <div style="font-weight: 800; font-size: 14px;">Раскидка смоков Province</div>
+                        <div style="font-size: 11px; color: var(--text-dim); margin-top: 4px;">Еженедельное</div>
+                    </div>
+                    <span style="font-size: 12px; font-weight: 600; color: #ffc000;">На проверке</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-board" class="tab-content">
+            <h2>Тактическая доска</h2>
+            <div class="glass-card">
+                <select class="map-select" id="map-select" onchange="clearBoard()">
+                    <option value="sandstone">Sandstone</option>
+                    <option value="province">Province</option>
+                    <option value="rust">Rust</option>
+                    <option value="sakura">Sakura</option>
+                    <option value="zone9">Zone 9</option>
+                    <option value="breeze">Breeze</option>
+                    <option value="dune">Dune</option>
+                </select>
+                <div class="canvas-container">
+                    <canvas id="tactic-canvas"></canvas>
+                </div>
+                <button class="btn btn-no" style="width: 100%; border: none;" onclick="clearBoard()">Очистить маршруты</button>
+            </div>
+        </div>
+
+        <div id="tab-profile" class="tab-content">
+            <h2>Мой профиль</h2>
+            <div class="glass-card profile-header">
+                <div>
+                    <div style="font-size: 18px; font-weight: 800;">@MyNickname</div>
+                    <div style="font-size: 12px; color: var(--accent-neon); margin-top: 5px; font-weight: 600;">MVP Очки: 150</div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 10px; font-weight: 800; color: var(--text-dim);">СТРАЙКИ (3 = КИК)</div>
+                    <div class="strikes-box">
+                        <div class="strike-dot active"></div> <div class="strike-dot"></div>
+                        <div class="strike-dot"></div>
+                    </div>
+                </div>
+            </div>
+
+            <h2>Зал славы (Топ недели)</h2>
+            <div class="glass-card task-list">
+                <div class="task-item">
+                    <div style="display: flex; gap: 15px; align-items: center;">
+                        <span style="color: #FFD700; font-weight: 800; font-size: 18px;">1</span>
+                        <span style="font-weight: 600;">@CaptainPro</span>
+                    </div>
+                    <span style="color: var(--accent-neon); font-weight: 800;">280 pts</span>
+                </div>
+                <div class="task-item">
+                    <div style="display: flex; gap: 15px; align-items: center;">
+                        <span style="color: #C0C0C0; font-weight: 800; font-size: 18px;">2</span>
+                        <span style="font-weight: 600;">@AimGod</span>
+                    </div>
+                    <span style="color: var(--accent-neon); font-weight: 800;">210 pts</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-finance" class="tab-content">
+            <div class="glass-card finance-card">
+                <div class="balance-title">Бюджет клана</div>
+                <div class="balance-sum">15 400 ₽</div>
+            </div>
+            
+            <h2>История операций</h2>
+            <div class="glass-card task-list">
+                <div class="task-item">
+                    <div>
+                        <div style="font-weight: 800; font-size: 14px;">Призовые FastCup</div>
+                        <div style="font-size: 11px; color: var(--text-dim); margin-top: 4px;">12 Мая</div>
+                    </div>
+                    <span style="color: #00ff88; font-weight: 800;">+ 5000 ₽</span>
+                </div>
+                <div class="task-item">
+                    <div>
+                        <div style="font-weight: 800; font-size: 14px;">Оплата аватарок клана</div>
+                        <div style="font-size: 11px; color: var(--text-dim); margin-top: 4px;">10 Мая</div>
+                    </div>
+                    <span style="color: #ff2a55; font-weight: 800;">- 1500 ₽</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-admin" class="tab-content">
+            <h2 style="color: var(--accent-purple);">Управление кланом (Кэп)</h2>
+            
+            <div class="glass-card">
+                <h3 style="font-size: 14px; margin-bottom: 15px; color: var(--text-dim);">Заявки (Гости)</h3>
+                <div class="task-item">
+                    <span style="font-weight: 600; font-size: 14px;">@NewPlayer2026</span>
+                    <div style="display: flex; gap: 5px;">
+                        <button class="btn btn-yes" style="padding: 8px 12px;" onclick="sendAction('accept_player', 1)">Принять</button>
+                        <button class="btn btn-no" style="padding: 8px 12px;" onclick="sendAction('kick_player', 1)">Кик</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <h3 style="font-size: 14px; margin-bottom: 15px; color: var(--text-dim);">Дисциплина и Расписание</h3>
+                <button class="btn btn-no" style="width: 100%; margin-bottom: 10px;" onclick="sendAction('give_strike', null)">Выдать Страйк</button>
+                <button class="btn btn-primary" style="width: 100%; margin-bottom: 10px;" onclick="sendAction('create_event', null)">Создать Прак / Турнир</button>
+                <button class="btn btn-late" style="width: 100%; background: transparent; border: 1px solid var(--btn-yellow-border);" onclick="sendAction('clear_schedule', null)">Очистить расписание недели</button>
+            </div>
+        </div>
+
+    </div>
+
+    <nav class="bottom-nav" id="main-nav" style="display: none;">
+        <button class="nav-item active" onclick="openTab('tab-schedule', this)">
+            <span class="nav-icon">📅</span>
+            <span>График</span>
+        </button>
+        <button class="nav-item" onclick="openTab('tab-board', this)">
+            <span class="nav-icon">🗺</span>
+            <span>Доска</span>
+        </button>
+        <button class="nav-item" onclick="openTab('tab-profile', this)">
+            <span class="nav-icon">🛡</span>
+            <span>Профиль</span>
+        </button>
+        <button class="nav-item" onclick="openTab('tab-finance', this)">
+            <span class="nav-icon">💰</span>
+            <span>Казна</span>
+        </button>
+        <button class="nav-item" id="nav-admin" style="display: none;" onclick="openTab('tab-admin', this)">
+            <span class="nav-icon">⚙️</span>
+            <span>Кэп</span>
+        </button>
+    </nav>
+
+    <script>
+        // Инициализация Telegram API
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.ready();
+
+        /* ================= ЛОГИКА РОЛЕЙ ================= */
+        // ВНИМАНИЕ: Для теста меняй эту переменную!
+        // Варианты: 'guest', 'player', 'captain', 'creator'
+        // Автоматически получаем роль из ссылки, которую отправил бот
+        const urlParams = new URLSearchParams(window.location.search);
+        let currentUserRole = urlParams.get('role') || 'guest';
+
+        function initApp() {
+            const uiRole = document.getElementById('ui-role');
+            const nav = document.getElementById('main-nav');
+            const navAdmin = document.getElementById('nav-admin');
+
+            if (currentUserRole === 'guest') {
+                // Гость: видит только заглушку, меню скрыто
+                uiRole.innerText = 'ГОСТЬ (ОЖИДАНИЕ)';
+                uiRole.style.color = '#ffc000';
+                openTab('tab-guest', null);
+            } else {
+                // Игроки и выше: показываем меню
+                nav.style.display = 'flex';
+                
+                if (currentUserRole === 'player') {
+                    uiRole.innerText = 'ИГРОК';
+                    openTab('tab-schedule', document.querySelectorAll('.nav-item')[0]);
+                } 
+                else if (currentUserRole === 'captain' || currentUserRole === 'creator') {
+                    uiRole.innerText = currentUserRole === 'creator' ? 'СОЗДАТЕЛЬ' : 'КАПИТАН';
+                    uiRole.style.color = 'var(--accent-purple)';
+                    uiRole.style.borderColor = 'var(--accent-purple)';
+                    
+                    // Открываем вкладку управления для Кэпа
+                    navAdmin.style.display = 'flex';
+                    openTab('tab-schedule', document.querySelectorAll('.nav-item')[0]);
+                }
+            }
+        }
+
+        /* ================= НАВИГАЦИЯ ================= */
+        function openTab(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            
+            if (btn) {
+                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+                btn.classList.add('active');
+                tg.HapticFeedback.selectionChanged();
+            }
+        }
+
+        /* ================= ОТПРАВКА ДАННЫХ БОТУ ================= */
+        function sendAction(actionType, payload) {
+            tg.HapticFeedback.impactOccurred('medium');
+            
+            // Всплывающее уведомление для красоты
+            if(actionType === 'status_yes') alert('Бот записал: Вы будете на матче');
+            if(actionType === 'status_no') alert('Бот записал: Вы пропустите матч');
+            if(actionType === 'status_late') alert('Бот записал: Вы опоздаете на 10 минут');
+            
+            // Отправляем JSON строку в Python
+            const dataStr = JSON.stringify({ action: actionType, data: payload });
+            tg.sendData(dataStr);
+        }
+
+        /* ================= ТАКТИЧЕСКАЯ ДОСКА ================= */
+        const canvas = document.getElementById('tactic-canvas');
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+
+        function resizeCanvas() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function getMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            let clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            let clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return { x: clientX - rect.left, y: clientY - rect.top };
+        }
+
+        function startPosition(e) { e.preventDefault(); isDrawing = true; draw(e); }
+        function endPosition() { isDrawing = false; ctx.beginPath(); }
+        function draw(e) {
+            if (!isDrawing) return;
+            e.preventDefault();
+            const pos = getMousePos(e);
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = '#00f3ff'; // Неоновый маркер
+            
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
+        }
+
+        canvas.addEventListener('mousedown', startPosition);
+        canvas.addEventListener('mouseup', endPosition);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('touchstart', startPosition);
+        canvas.addEventListener('touchend', endPosition);
+        canvas.addEventListener('touchmove', draw);
+
+        function clearBoard() {
+            tg.HapticFeedback.impactOccurred('rigid');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        // Запуск интерфейса
+        initApp();
+    </script>
+</body>
+</html>
