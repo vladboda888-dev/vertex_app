@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Divo eSports Cosmic Premium</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" rel="stylesheet" />
+    <style>
+        :root {
+            --space-dark: #04020a;
+            --nebula-purple: rgba(147, 51, 234, 0.25);
+            --nebula-cyan: rgba(6, 182, 212, 0.2);
+            --gold-divo: #FACC15;
+            --glass-bg: rgba(15, 15, 22, 0.5);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+            --color-prak: #10B981;
+            --color-tour: #06B6D4;
+            --color-review: #A855F7;
+            --color-weekend: #EF4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Montserrat', sans-serif; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: var(--space-dark);
+            background-image: 
+                radial-gradient(circle at 10% 20%, var(--nebula-purple) 0%, transparent 50%),
+                radial-gradient(circle at 90% 80%, var(--nebula-cyan) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(250, 204, 21, 0.05) 0%, transparent 60%);
+            background-attachment: fixed; color: var(--text-main); overflow-x: hidden; padding-bottom: 120px;
+        }
+
+        ::-webkit-scrollbar { display: none; }
+
+        .header {
+            padding: 20px 20px 15px; display: flex; justify-content: space-between; align-items: center;
+            background: linear-gradient(180deg, rgba(4,2,10,0.95) 0%, transparent 100%);
+            position: sticky; top: 0; z-index: 50; backdrop-filter: blur(15px);
+        }
+
+        .logo {
+            font-size: 26px; font-weight: 900; letter-spacing: 2px;
+            background: linear-gradient(135deg, #FFF, var(--gold-divo));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(250, 204, 21, 0.4);
+        }
+
+        .role-badge {
+            font-size: 11px; font-weight: 800; padding: 6px 14px; border-radius: 12px;
+            background: rgba(250, 204, 21, 0.1); border: 1px solid rgba(250, 204, 21, 0.4);
+            color: var(--gold-divo); text-transform: uppercase;
+        }
+
+        .container { padding: 0 15px; }
+
+        h2 {
+            font-size: 16px; font-weight: 900; margin: 25px 0 15px; color: var(--text-main);
+            text-transform: uppercase; letter-spacing: 1.5px; display: flex; align-items: center; gap: 8px;
+        }
+        h2::before { content: ''; display: block; width: 4px; height: 16px; background: var(--gold-divo); border-radius: 2px; box-shadow: 0 0 10px var(--gold-divo); }
+
+        .glass-card {
+            background: var(--glass-bg); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border); border-radius: 20px; padding: 18px; margin-bottom: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        /* --- Календарь --- */
+        .month-title { text-align: center; font-size: 20px; font-weight: 900; text-transform: uppercase; margin-bottom: 15px; letter-spacing: 2px; color: var(--gold-divo); text-shadow: 0 0 15px rgba(250, 204, 21, 0.3);}
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; }
+        .cal-header { font-size: 12px; font-weight: 800; color: var(--text-muted); margin-bottom: 10px; }
+        .cal-header.weekend { color: var(--color-weekend); }
+        
+        .cal-day-box { display: flex; flex-direction: column; align-items: center; height: 48px; position: relative; padding-top: 6px; cursor: pointer; transition: 0.2s;}
+        .cal-num { font-size: 16px; font-weight: 800; z-index: 2; }
+        .cal-day-box.weekend .cal-num { color: var(--color-weekend); }
+        
+        .cal-day-box.selected::before {
+            content: ''; position: absolute; top: -2px; left: 50%; transform: translateX(-50%);
+            width: 38px; height: 46px; border: 2px solid #FFF; border-radius: 12px;
+            background: rgba(255,255,255,0.1); z-index: 1; box-shadow: 0 0 15px rgba(255,255,255,0.2);
+        }
+
+        .indicator-container { display: flex; gap: 4px; margin-top: 6px; z-index: 2;}
+        .cal-line { width: 6px; height: 6px; border-radius: 50%; } 
+        .line-prak { background: var(--color-prak); box-shadow: 0 0 8px var(--color-prak); }
+        .line-tour { background: var(--color-tour); box-shadow: 0 0 8px var(--color-tour); }
+        .line-review { background: var(--color-review); box-shadow: 0 0 8px var(--color-review); }
+        .line-rest { background: var(--color-weekend); box-shadow: 0 0 8px var(--color-weekend); }
+
+        .empty-state { text-align: center; padding: 30px 15px; color: var(--text-muted); font-size: 13px; font-weight: 600; border: 1px dashed rgba(255,255,255,0.1); border-radius: 16px;}
+        
+        /* --- События --- */
+        .event-title { font-size: 18px; font-weight: 900; margin-bottom: 5px; color: #FFF; text-shadow: 0 0 10px rgba(255,255,255,0.2);}
+        .event-time { font-size: 12px; color: var(--gold-divo); margin-bottom: 15px; font-weight: 800; letter-spacing: 0.5px;}
+        
+        .btn-row { display: flex; gap: 10px; margin-bottom: 15px; }
+        .btn { flex: 1; padding: 14px; border-radius: 12px; border: none; font-weight: 800; font-size: 12px; text-transform: uppercase; cursor: pointer; transition: 0.2s; color: #FFF; letter-spacing: 0.5px; display: flex; align-items: center; justify-content: center; gap: 6px;}
+        .btn-green { background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); color: var(--color-prak); }
+        .btn-red { background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: var(--color-weekend); }
+        .btn-gold { background: linear-gradient(45deg, #C29B0C, #FACC15); color: #000; box-shadow: 0 4px 15px rgba(250, 204, 21, 0.3); width: 100%; margin-bottom: 10px;}
+        .btn-dark { background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border); width: 100%; color: var(--text-main); }
+        .btn:active { transform: scale(0.96); }
+
+        .roster-box { background: rgba(0,0,0,0.4); border-radius: 12px; padding: 12px; border: 1px inset rgba(255,255,255,0.03); }
+        .roster-item { font-size: 12px; display: flex; justify-content: space-between; margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px dashed rgba(255,255,255,0.05);}
+        .roster-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0;}
+        .r-name { color: #FFF; font-weight: 800; }
+
+        .task-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px dashed rgba(255,255,255,0.1); }
+        .task-item:last-child { border-bottom: none; }
+        .task-status { font-size: 11px; font-weight: 800; color: var(--color-tour); text-transform: uppercase; }
+
+        /* --- Доска --- */
+        .board-controls { display: flex; gap: 8px; margin-bottom: 12px; }
+        .map-select { flex: 1; padding: 12px; background: rgba(0,0,0,0.6); color: var(--gold-divo); border: 1px solid var(--glass-border); border-radius: 12px; outline: none; font-weight: 800; text-transform: uppercase;}
+        .zoom-btn { background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); color: #FFF; border-radius: 12px; font-weight: bold; font-size: 20px; padding: 0 15px; cursor: pointer; display: flex; align-items: center; justify-content: center;}
+        
+        .mode-toggle { display: flex; width: 100%; background: rgba(0,0,0,0.4); border-radius: 12px; padding: 4px; border: 1px solid var(--glass-border); margin-bottom: 15px;}
+        .mode-btn { flex: 1; padding: 10px; text-align: center; font-weight: 800; font-size: 12px; color: var(--text-muted); border-radius: 10px; transition: 0.3s; cursor: pointer; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 6px;}
+        .mode-btn.active { background: var(--gold-divo); color: #000; box-shadow: 0 0 15px rgba(250, 204, 21, 0.4); }
+
+        .board-viewport { width: 100%; height: 380px; background-color: #020108; border-radius: 16px; border: 1px solid var(--glass-border); overflow: auto; position: relative; box-shadow: inset 0 0 40px rgba(0,0,0,0.8); touch-action: pan-x pan-y; }
+        .board-scaler { width: 1200px; height: 1200px; transform-origin: top left; transition: transform 0.2s; background-size: cover; background-position: center; background-repeat: no-repeat; }
+        #tactic-canvas { width: 100%; height: 100%; }
+
+        .color-picker { display: flex; justify-content: space-around; padding: 15px 0; background: rgba(0,0,0,0.3); border-radius: 14px; margin-top: 15px; margin-bottom: 15px;}
+        .color-dot { width: 24px; height: 24px; border-radius: 50%; border: 2px solid transparent; transition: 0.2s; cursor: pointer;}
+        .color-dot.active { border-color: #FFF; transform: scale(1.3); box-shadow: 0 0 12px currentColor; }
+
+        /* --- Ввод --- */
+        .input-dark { width: 100%; padding: 14px; background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border); color: #FFF; border-radius: 12px; margin-bottom: 12px; font-size: 14px; font-weight: 600; outline: none; transition: 0.3s;}
+        .input-dark:focus { border-color: var(--gold-divo); box-shadow: 0 0 15px rgba(250, 204, 21, 0.2); }
+
+        .balance-sum { font-size: 42px; font-weight: 900; color: var(--gold-divo); text-align: center; text-shadow: 0 0 30px rgba(250, 204, 21, 0.5); margin: 20px 0; }
+
+        /* --- Навигация --- */
+        .bottom-nav {
+            position: fixed; bottom: 0; width: 100%; height: 85px; background: rgba(2, 1, 8, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid var(--glass-border); display: flex; justify-content: space-around; align-items: center; z-index: 100;
+        }
+        .nav-item { background: none; border: none; color: var(--text-muted); font-size: 10px; font-weight: 800; text-transform: uppercase; display: flex; flex-direction: column; align-items: center; gap: 6px; transition: 0.3s; cursor: pointer;}
+        .material-symbols-rounded { font-size: 26px; transition: 0.3s; opacity: 0.6; }
+        .nav-item.active { color: var(--gold-divo); }
+        .nav-item.active .material-symbols-rounded { opacity: 1; text-shadow: 0 0 20px var(--gold-divo); transform: translateY(-4px); font-variation-settings: 'FILL' 1;}
+
+        .tab-content { display: none; animation: fadeIn 0.3s ease; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="logo">DIVO</div>
+        <div class="role-badge" id="ui-role">Загрузка...</div>
+    </header>
+
+    <div class="container">
+        
+        <div id="tab-calendar" class="tab-content active">
+            <div class="month-title" id="current-month-title">ИЮНЬ 2026</div>
+            <div class="glass-card" style="padding: 15px 10px;">
+                <div class="cal-grid">
+                    <div class="cal-header">ПН</div><div class="cal-header">ВТ</div><div class="cal-header">СР</div>
+                    <div class="cal-header">ЧТ</div><div class="cal-header">ПТ</div><div class="cal-header weekend">СБ</div><div class="cal-header weekend">ВС</div>
+                </div>
+                <div class="cal-grid" id="calendar-body"></div>
+            </div>
+            <h2 id="selected-date-title"><span class="material-symbols-rounded">event</span> События на сегодня</h2>
+            <div id="daily-events-container"></div>
+            <h2><span class="material-symbols-rounded">task_alt</span> Задания</h2>
+            <div class="glass-card" id="tasks-container"></div>
+        </div>
+
+        <div id="tab-matches" class="tab-content">
+            <h2><span class="material-symbols-rounded">sports_esports</span> Все матчи клана</h2>
+            <div id="all-matches-container"></div>
+        </div>
+
+        <div id="tab-board" class="tab-content">
+            <h2><span class="material-symbols-rounded">map</span> Тактическая доска</h2>
+            <div class="glass-card" style="padding: 15px;">
+                <div class="board-controls">
+                    <select class="map-select" id="map-select" onchange="changeMap()">
+                        <option value="none" disabled selected>-- Карта --</option>
+                        <option value="sandstone.png">Sandstone</option>
+                        <option value="province.png">Province</option>
+                        <option value="rust.png">Rust</option>
+                        <option value="sakura.png">Sakura</option>
+                        <option value="zone9.png">Zone 9</option>
+                        <option value="breeze.png">Breeze</option>
+                        <option value="dune.png">Dune</option>
+                    </select>
+                    <button class="zoom-btn" onclick="zoomBoard(0.2)"><span class="material-symbols-rounded">zoom_in</span></button>
+                    <button class="zoom-btn" onclick="zoomBoard(-0.2)"><span class="material-symbols-rounded">zoom_out</span></button>
+                </div>
+                <div class="mode-toggle">
+                    <div class="mode-btn active" id="btn-draw" onclick="setBoardMode('draw')"><span class="material-symbols-rounded">draw</span> Рисовать</div>
+                    <div class="mode-btn" id="btn-move" onclick="setBoardMode('move')"><span class="material-symbols-rounded">pan_tool</span> Двигать</div>
+                </div>
+                
+                <div class="board-viewport" id="board-viewport">
+                    <div class="board-scaler" id="board-scaler">
+                        <canvas id="tactic-canvas" width="1200" height="1200"></canvas>
+                    </div>
+                </div>
+                
+                <div class="color-picker">
+                    <div class="color-dot active" style="background: #00F3FF;" onclick="setColor(this, '#00F3FF')"></div>
+                    <div class="color-dot" style="background: #00FF88;" onclick="setColor(this, '#00FF88')"></div>
+                    <div class="color-dot" style="background: #FACC15;" onclick="setColor(this, '#FACC15')"></div>
+                    <div class="color-dot" style="background: #A855F7;" onclick="setColor(this, '#A855F7')"></div>
+                    <div class="color-dot" style="background: #FFFFFF;" onclick="setColor(this, '#FFFFFF')"></div>
+                </div>
+                <button class="btn btn-dark" onclick="clearBoard()"><span class="material-symbols-rounded">delete</span> Очистить доску</button>
+            </div>
+        </div>
+
+        <div id="tab-finance" class="tab-content">
+            <h2><span class="material-symbols-rounded">account_balance</span> Казна клана</h2>
+            <div class="glass-card">
+                <div style="font-size: 11px; color: var(--text-muted); text-align: center; text-transform: uppercase; font-weight: 800;">Общий баланс</div>
+                <div class="balance-sum" id="total-balance">0 G</div>
+            </div>
+            <h2><span class="material-symbols-rounded">history</span> История</h2>
+            <div id="finance-history"></div>
+        </div>
+
+        <div id="tab-admin" class="tab-content">
+            <h2 style="color: var(--gold-divo);"><span class="material-symbols-rounded">admin_panel_settings</span> Панель Капитана</h2>
+            <div class="glass-card">
+                <h3 style="font-size: 14px; margin-bottom: 12px;">Новое событие</h3>
+                <input type="date" id="new-event-date" class="input-dark">
+                <select id="new-event-type" class="input-dark">
+                    <option value="prak">Прак (Тренировка)</option>
+                    <option value="tour">Турнир</option>
+                    <option value="review">Разбор демок</option>
+                    <option value="rest">Выходной (Нет игр)</option>
+                </select>
+                <input type="text" id="new-event-title" class="input-dark" placeholder="Название (например: vs Horizon)">
+                <input type="text" id="new-event-time" class="input-dark" placeholder="Время и Карта (20:00 - Sandstone)">
+                <button class="btn btn-gold" onclick="createEvent()"><span class="material-symbols-rounded">add_circle</span> Опубликовать</button>
+            </div>
+            <div class="glass-card">
+                <h3 style="font-size: 14px; margin-bottom: 12px;">Новое задание</h3>
+                <input type="text" id="new-task-title" class="input-dark" placeholder="Что сделать? (например: 500 киллов)">
+                <button class="btn btn-gold" onclick="createTask()"><span class="material-symbols-rounded">task</span> Добавить задание</button>
+            </div>
+            <div class="glass-card">
+                <h3 style="font-size: 14px; margin-bottom: 12px;">Операция с казной</h3>
+                <input type="number" id="fin-amount" class="input-dark" placeholder="Сумма (В голде)">
+                <input type="text" id="fin-desc" class="input-dark" placeholder="Описание">
+                <select id="fin-type" class="input-dark">
+                    <option value="income">Доход (+)</option>
+                    <option value="expense">Расход (-)</option>
+                </select>
+                <button class="btn btn-green" style="width: 100%; border: none;" onclick="addFinance()"><span class="material-symbols-rounded">savings</span> Внести в казну</button>
+            </div>
+        </div>
+    </div>
+
+    <nav class="bottom-nav" id="main-nav">
+        <button class="nav-item active" onclick="openTab('tab-calendar', this)"><span class="material-symbols-rounded">calendar_month</span><span>График</span></button>
+        <button class="nav-item" onclick="openTab('tab-matches', this)"><span class="material-symbols-rounded">sports_esports</span><span>Матчи</span></button>
+        <button class="nav-item" onclick="openTab('tab-board', this)"><span class="material-symbols-rounded">map</span><span>Доска</span></button>
+        <button class="nav-item" onclick="openTab('tab-finance', this)"><span class="material-symbols-rounded">account_balance</span><span>Казна</span></button>
+        <button class="nav-item admin-only" style="display: none;" onclick="openTab('tab-admin', this)"><span class="material-symbols-rounded">admin_panel_settings</span><span>Кэп</span></button>
+    </nav>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand(); tg.ready();
+
+        // ⚠️ ВСТАВЬ СЮДА ССЫЛКУ ИЗ LOCALTUNNEL ИЛИ NGROK ⚠️
+        const API_URL = "https://fd2800d15dc44b.lhr.life"; 
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        let userRole = urlParams.get('role') || 'creator'; 
+        const currentUser = tg.initDataUnsafe?.user || { username: "Tester", id: 7777777 };
+        const usernameDisplay = currentUser.username ? `@${currentUser.username}` : "Player";
+
+        let localData = { events: [], attendance: {}, tasks: [], finance: [], board: "" };
+        let currentSelectedDate = new Date().getDate(); 
+        
+        // Главная функция синхронизации с сервером
+        function syncData() {
+            fetch(`${API_URL}/api/sync`)
+                .then(res => res.json())
+                .then(data => {
+                    localData = data;
+                    renderCalendar();
+                    renderMatches();
+                    renderTasks();
+                    renderFinance();
+                    
+                    // Обновляем доску только если мы сейчас не рисуем
+                    if (!isDrawing && localData.board) {
+                        let img = new Image();
+                        img.onload = () => { ctx.clearRect(0,0,canvas.width,canvas.height); ctx.drawImage(img,0,0); };
+                        img.src = localData.board;
+                    }
+                })
+                .catch(e => console.log("Связь с сервером потеряна, ждем..."));
+        }
+
+        function postData(endpoint, bodyData) {
+            fetch(`${API_URL}/api/${endpoint}`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(bodyData)
+            }).then(() => syncData());
+        }
+
+        function initApp() {
+            const months = ["ЯНВАРЬ", "ФЕВРАЛЬ", "МАРТ", "АПРЕЛЬ", "МАЙ", "ИЮНЬ", "ИЮЛЬ", "АВГУСТ", "СЕНТЯБРЬ", "ОКТЯБРЬ", "НОЯБРЬ", "ДЕКАБРЬ"];
+            document.getElementById('current-month-title').innerText = `${months[new Date().getMonth()]} ${new Date().getFullYear()}`;
+
+            const uiRole = document.getElementById('ui-role');
+            if (userRole === 'guest') {
+                uiRole.innerText = 'ГОСТЬ';
+                document.querySelector('.container').innerHTML = `<div class="empty-state" style="margin-top:50px;">ДОСТУП ЗАКРЫТ<br>Ожидайте принятия в клан.</div>`;
+                document.getElementById('main-nav').style.display = 'none';
+                return;
+            }
+            uiRole.innerText = userRole === 'creator' ? 'СОЗДАТЕЛЬ' : (userRole === 'captain' ? 'КАПИТАН' : 'ИГРОК');
+            if (userRole === 'captain' || userRole === 'creator') document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'flex');
+            
+            document.getElementById('new-event-date').value = new Date().toISOString().split('T')[0];
+            
+            // Запускаем автоматическую синхронизацию каждые 3 секунды (LIVE эффект)
+            syncData();
+            setInterval(syncData, 3000);
+        }
+
+        function openTab(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            if (btn) {
+                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+                btn.classList.add('active');
+                tg.HapticFeedback.selectionChanged();
+            }
+        }
+
+        function renderCalendar() {
+            const calBody = document.getElementById('calendar-body');
+            calBody.innerHTML = '';
+            let d = new Date();
+            let days = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+            
+            for(let i = 1; i <= days; i++) {
+                let tempDate = new Date(d.getFullYear(), d.getMonth(), i);
+                const isWeekend = (tempDate.getDay() === 6 || tempDate.getDay() === 0);
+                const isSelected = (i === currentSelectedDate) ? 'selected' : '';
+                
+                let dayEvents = localData.events.filter(e => {
+                    let p = e.date.split('-'); return parseInt(p[2]) === i && (parseInt(p[1])-1) === tempDate.getMonth();
+                });
+
+                let isRest = false; let inds = '';
+                dayEvents.forEach(e => {
+                    if (e.type === 'rest') isRest = true;
+                    else inds += `<div class="cal-line ${e.type === 'prak' ? 'line-prak' : (e.type === 'tour' ? 'line-tour' : 'line-review')}"></div>`;
+                });
+
+                calBody.innerHTML += `<div class="cal-day-box ${(isWeekend||isRest)?'weekend':''} ${isSelected}" onclick="selectDate(${i})"><span class="cal-num">${i}</span><div class="indicator-container">${inds}</div></div>`;
+            }
+            renderDailyEvents();
+        }
+
+        function selectDate(day) { tg.HapticFeedback.selectionChanged(); currentSelectedDate = day; renderCalendar(); }
+
+        function createEvent() {
+            const date = document.getElementById('new-event-date').value;
+            const type = document.getElementById('new-event-type').value;
+            const title = document.getElementById('new-event-title').value;
+            const timeMap = document.getElementById('new-event-time').value;
+
+            if(!date || (!title && type !== 'rest')) return;
+            tg.HapticFeedback.impactOccurred('heavy');
+            
+            postData('event', { user_id: currentUser.id, date: date, type: type, title: type === 'rest' ? 'Выходной' : title, timeMap: timeMap || '-' });
+            
+            document.getElementById('new-event-title').value = '';
+            currentSelectedDate = parseInt(date.split('-')[2]);
+            openTab('tab-calendar', document.querySelectorAll('.nav-item')[0]);
+        }
+
+        function renderDailyEvents() {
+            let dayEvents = localData.events.filter(e => parseInt(e.date.split('-')[2]) === currentSelectedDate && (parseInt(e.date.split('-')[1])-1) === new Date().getMonth());
+            document.getElementById('daily-events-container').innerHTML = generateCardsHtml(dayEvents, "Нет запланированных событий.");
+        }
+
+        function renderMatches() { document.getElementById('all-matches-container').innerHTML = generateCardsHtml(localData.events, "Список событий пуст."); }
+
+        function generateCardsHtml(arr, emptyText) {
+            if (arr.length === 0) return `<div class="empty-state">${emptyText}</div>`;
+            let html = '';
+            [...arr].sort((a,b) => new Date(a.date) - new Date(b.date)).forEach(evt => {
+                if (evt.type === 'rest') {
+                    html += `<div class="glass-card" style="text-align:center;"><div style="font-size:18px; font-weight:900; color:var(--color-weekend);">ВЫХОДНОЙ</div><div style="font-size:12px; color:var(--text-muted); margin-top:5px;">${evt.date}</div></div>`;
+                    return;
+                }
+                let roster = localData.attendance[evt.id] || [];
+                let isAttending = roster.some(u => u.id === currentUser.id);
+                let rHtml = roster.length === 0 ? `<div class="roster-item" style="border:none; color:var(--text-muted);">Никто не записался</div>` : roster.map(u => `<div class="roster-item"><span class="r-name">${u.name}</span></div>`).join('');
+                let bColor = evt.type === 'prak' ? 'var(--color-prak)' : (evt.type === 'tour' ? 'var(--color-tour)' : 'var(--color-review)');
+                let tName = evt.type === 'prak' ? 'ПРАК' : (evt.type === 'tour' ? 'ТУРНИР' : 'РАЗБОР');
+
+                html += `<div class="glass-card"><div style="font-size:11px; color:${bColor}; font-weight:900; margin-bottom:8px;">${tName}</div><div class="event-title">${evt.title}</div><div class="event-time">${evt.date} | ${evt.timeMap}</div>
+                <div class="btn-row"><button class="btn btn-green" onclick="attend(${evt.id}, true)" ${isAttending?'style="box-shadow:0 0 15px var(--color-prak)"':''}><span class="material-symbols-rounded" style="font-size:16px;">check_circle</span> Буду</button>
+                <button class="btn btn-red" onclick="attend(${evt.id}, false)"><span class="material-symbols-rounded" style="font-size:16px;">cancel</span> Скип</button></div>
+                <div class="roster-box"><div style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px; font-weight: 900;">СОСТАВ (${roster.length})</div>${rHtml}</div></div>`;
+            });
+            return html;
+        }
+
+        function attend(eventId, status) {
+            tg.HapticFeedback.impactOccurred('medium');
+            postData('attend', { eventId: eventId, userId: currentUser.id, username: usernameDisplay, status: status });
+        }
+
+        /* === ЗАДАНИЯ === */
+        function createTask() {
+            const title = document.getElementById('new-task-title').value;
+            if(!title) return;
+            postData('task', { action: 'create', title: title });
+            document.getElementById('new-task-title').value = '';
+            openTab('tab-calendar', document.querySelectorAll('.nav-item')[0]);
+        }
+
+        function submitTask(taskId) {
+            postData('task', { action: 'update_status', taskId: taskId, userId: currentUser.id, status: 'pending' });
+        }
+
+        function renderTasks() {
+            if (localData.tasks.length === 0) { document.getElementById('tasks-container').innerHTML = `<div class="empty-state">Нет активных заданий</div>`; return; }
+            let html = '';
+            localData.tasks.forEach(t => {
+                let status = t.userStatuses ? t.userStatuses[currentUser.id] : null;
+                let btn = status === 'done' ? `<span style="color:var(--color-prak); font-weight:800; font-size:11px;">✅ ВЫПОЛНЕНО</span>` : 
+                          (status === 'pending' ? `<span style="color:var(--gold-divo); font-weight:800; font-size:11px;">⏳ НА ПРОВЕРКЕ</span>` : 
+                          `<button class="btn btn-green" style="padding: 8px 12px; margin:0;" onclick="submitTask(${t.id})">Сдать</button>`);
+                html += `<div class="task-item"><div style="font-weight: 800; font-size: 13px;">${t.title}</div>${btn}</div>`;
+            });
+            document.getElementById('tasks-container').innerHTML = html;
+        }
+
+        /* === ФИНАНСЫ === */
+        function addFinance() {
+            const amount = document.getElementById('fin-amount').value;
+            const desc = document.getElementById('fin-desc').value;
+            const type = document.getElementById('fin-type').value;
+            if(!amount || !desc) return;
+            tg.HapticFeedback.impactOccurred('heavy');
+            postData('finance', { user_id: currentUser.id, amount: parseInt(amount), desc: desc, type: type, date: new Date().toLocaleDateString() });
+            document.getElementById('fin-amount').value = ''; document.getElementById('fin-desc').value = '';
+            openTab('tab-finance', document.querySelectorAll('.nav-item')[3]);
+        }
+
+        function renderFinance() {
+            let total = 0; let html = '';
+            if (localData.finance.length === 0) html = `<div class="empty-state">Казна пуста.</div>`;
+            else {
+                localData.finance.forEach(f => {
+                    let isInc = f.type === 'income'; total += isInc ? f.amount : -f.amount;
+                    html += `<div class="glass-card" style="padding:15px; display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <div><div style="font-weight:900; font-size:14px;">${f.desc}</div><div style="font-size:10px; color:var(--text-muted); margin-top:4px;">${f.date}</div></div>
+                    <div style="font-weight:900; font-size:16px; color:${isInc?'var(--color-prak)':'var(--color-weekend)'}">${isInc?'+':'-'} ${f.amount} G</div></div>`;
+                });
+            }
+            document.getElementById('total-balance').innerText = `${total} G`;
+            document.getElementById('finance-history').innerHTML = html;
+        }
+
+        /* === ТАКТИЧЕСКАЯ ДОСКА === */
+        const canvas = document.getElementById('tactic-canvas');
+        const ctx = canvas.getContext('2d');
+        const scaler = document.getElementById('board-scaler');
+        
+        let isDrawing = false; let drawColor = '#00F3FF'; let scale = 1;
+
+        function setBoardMode(mode) {
+            tg.HapticFeedback.selectionChanged();
+            document.getElementById('btn-draw').classList.toggle('active', mode === 'draw');
+            document.getElementById('btn-move').classList.toggle('active', mode === 'move');
+            // В режиме move отключаем события мыши на канвасе, чтобы работал нативный скролл контейнера
+            canvas.style.pointerEvents = mode === 'move' ? 'none' : 'auto';
+        }
+
+        function changeMap() {
+            const mapFile = document.getElementById('map-select').value;
+            if(mapFile !== 'none') scaler.style.backgroundImage = `url('${mapFile}')`;
+            clearBoard();
+        }
+
+        function setColor(el, color) {
+            drawColor = color; document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+            el.classList.add('active'); setBoardMode('draw'); 
+        }
+
+        function zoomBoard(delta) {
+            tg.HapticFeedback.selectionChanged();
+            scale += delta; if(scale < 0.5) scale = 0.5; if(scale > 3) scale = 3;
+            scaler.style.transform = `scale(${scale})`;
+        }
+
+        function getMapPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            let clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            let clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return { x: (clientX - rect.left) / scale, y: (clientY - rect.top) / scale };
+        }
+
+        function startDraw(e) { e.preventDefault(); isDrawing = true; const pos = getMapPos(e); ctx.beginPath(); ctx.moveTo(pos.x, pos.y); }
+        function doDraw(e) {
+            if (!isDrawing) return; e.preventDefault(); const pos = getMapPos(e);
+            ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = drawColor;
+            ctx.shadowBlur = 10; ctx.shadowColor = drawColor;
+            ctx.lineTo(pos.x, pos.y); ctx.stroke(); ctx.beginPath(); ctx.moveTo(pos.x, pos.y);
+        }
+        function endDraw() { 
+            if(isDrawing) {
+                isDrawing = false; ctx.beginPath(); 
+                // Отправляем рисунок на сервер
+                postData('board', { image: canvas.toDataURL() });
+            }
+        }
+
+        canvas.addEventListener('touchstart', startDraw); canvas.addEventListener('touchmove', doDraw); canvas.addEventListener('touchend', endDraw);
+        canvas.addEventListener('mousedown', startDraw); canvas.addEventListener('mousemove', doDraw); canvas.addEventListener('mouseup', endDraw); canvas.addEventListener('mouseleave', endDraw);
+
+        function clearBoard() {
+            tg.HapticFeedback.impactOccurred('rigid');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            postData('board', { image: "" });
+        }
+
+        initApp();
+    </script>
+</body>
+</html>
